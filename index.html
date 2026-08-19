@@ -1,0 +1,2112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reporting HSE — CM3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plane:#eef2f7; --surface:#ffffff; --surface2:#f7f9fc; --surface3:#eaf1f8;
+  --ink:#0f1c30; --ink2:#48586e; --faint:#8a99ab;
+  --line:#dde5ee; --line2:#c3d1e0;
+  --marine:#003A6E; --marine2:#0a2a52; --navy:#0a1830;
+  --cyan:#1180c4; --bleu:#2a78d6; --accent:#E8720C; --accent2:#c25c07;
+  --ok:#0f9d58; --mid:#e0a000; --warn:#d03b3b; --violet:#4a3aa7;
+  --ok-bg:#e7f6ee; --mid-bg:#fdf3dc; --warn-bg:#fbe9e9; --info-bg:#e8f1fb;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#4a3aa7;
+  --r:14px; --sh:0 1px 2px rgba(15,28,48,.06),0 6px 18px rgba(15,28,48,.07);
+  --sh2:0 2px 6px rgba(15,28,48,.09),0 12px 30px rgba(15,28,48,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{background:var(--plane)}
+body{font-family:"Barlow","Segoe UI",-apple-system,Roboto,Arial,sans-serif;color:var(--ink);
+  background:var(--plane);-webkit-text-size-adjust:100%;min-height:100vh;padding-bottom:84px;font-size:15px}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;font-weight:700}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ------------- Header ------------- */
+header{background:linear-gradient(135deg,var(--marine),var(--marine2));color:#fff;padding:9px 16px;
+  display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:25;flex-wrap:wrap;
+  box-shadow:0 2px 14px rgba(0,40,80,.22)}
+.logo{width:56px;height:34px;flex:none;background:#fff;border-radius:7px;padding:4px 5px;display:grid;place-items:center}
+.logo svg{width:100%;height:100%;display:block}
+.htit{margin-right:auto;min-width:140px}
+.htit h1{font-size:16.5px;letter-spacing:.5px;text-transform:uppercase;line-height:1.1}
+.htit small{display:block;font-size:11.5px;color:#a8c4de;font-weight:600}
+.selgrp{display:flex;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:3px;gap:2px}
+.selgrp button{background:none;border:0;color:#cfe0ef;padding:5px 12px;border-radius:7px;cursor:pointer;font-weight:700;font-size:13px;transition:.15s}
+.selgrp button[aria-pressed="true"]{background:#fff;color:var(--marine)}
+.hsel{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;border-radius:10px;padding:6px 10px;font-weight:600;font-size:13px}
+.hsel option{color:#111}
+.hbtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;padding:7px 12px;
+  border-radius:10px;cursor:pointer;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+.hbtn:hover{background:rgba(255,255,255,.22)}
+.hbtn.on{background:var(--accent);border-color:var(--accent)}
+.dot{width:8px;height:8px;border-radius:50%;background:#8aa5bd;flex:none}
+.dot.ok{background:#4ade80}.dot.warn{background:#fbbf24}.dot.err{background:#f87171}
+
+/* ------------- Tabs ------------- */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);
+  display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom);overflow-x:auto;scrollbar-width:none;
+  box-shadow:0 -2px 14px rgba(15,28,48,.07)}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:1 0 auto;min-width:84px;background:none;border:0;padding:8px 6px 7px;font-size:10.5px;
+  color:var(--faint);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;font-weight:600}
+nav.tabs button .ic{font-size:18px;line-height:1.1}
+nav.tabs button.on{color:var(--marine);font-weight:700}
+nav.tabs button.on::before{content:"";position:absolute;top:0;left:16%;right:16%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+
+/* ------------- Layout ------------- */
+main{max-width:1240px;margin:0 auto;padding:16px 14px 10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);
+  padding:16px;margin-bottom:14px;animation:rise .3s both}
+.card>h2{font-size:15px;margin-bottom:3px;display:flex;align-items:center;gap:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--marine)}
+.card>h2 .bar{width:4px;height:16px;border-radius:3px;background:var(--accent);flex:none}
+.card.c-b>h2 .bar{background:var(--bleu)} .card.c-r>h2 .bar{background:var(--warn)}
+.card.c-v>h2 .bar{background:var(--violet)} .card.c-g>h2 .bar{background:var(--ok)}
+.card.c-o>h2 .bar{background:var(--accent)}
+.card.c-rose>h2 .bar{background:#d4479b}
+.card.c-jaune>h2 .bar{background:#d9a400}
+.card>p.sub{margin:0 0 14px;color:var(--ink2);font-size:13px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(var(--min,220px),1fr))}
+.g4{grid-template-columns:repeat(4,1fr)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+
+/* ------------- KPI ------------- */
+.kpigrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px}
+.kpi{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:center;position:relative}
+.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);font-weight:700;line-height:1.25;min-height:28px;display:flex;align-items:center;justify-content:center;padding:0 20px;text-align:center}
+.kpi .v{font-family:"Barlow Condensed",Arial;font-size:33px;font-weight:700;line-height:1.05;margin-top:2px;color:var(--ink)}
+.kpi .s{font-size:11.5px;color:var(--ink2);margin-top:2px}
+.kpi.good{background:var(--ok-bg);border-color:#bfe6d1} .kpi.good .v{color:#0b7c45}
+.kpi.mid{background:var(--mid-bg);border-color:#f0dcac} .kpi.mid .v{color:#946a00}
+.kpi.bad{background:var(--warn-bg);border-color:#f0c4c4} .kpi.bad .v{color:#b02c2c}
+.kpi .pic{position:absolute;top:8px;right:8px}
+.hero{background:linear-gradient(135deg,var(--marine),#0d3a70);color:#fff;border-radius:var(--r);padding:15px;text-align:center;box-shadow:var(--sh2)}
+.hero .v{font-family:"Barlow Condensed",Arial;font-size:60px;font-weight:700;line-height:.95}
+.hero .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;color:#bcd6ec;font-weight:700}
+.hero .s{font-size:12px;color:#a8c4de;margin-top:4px}
+.delta{font-size:11.5px;font-weight:700}
+.delta.up{color:var(--warn)} .delta.down{color:#0b7c45} .delta.flat{color:var(--faint)}
+
+/* ------------- Jauge ------------- */
+.gaugebox{text-align:center}
+.gauge{width:102px;height:102px;margin:0 auto;display:block}
+.gauge .gbg{fill:none;stroke:#e6ecf3;stroke-width:9}
+.gauge .gfg{fill:none;stroke-width:9;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dasharray .6s}
+.gauge .gfg.c-ok{stroke:var(--ok)} .gauge .gfg.c-mid{stroke:var(--mid)} .gauge .gfg.c-bad{stroke:var(--warn)} .gauge .gfg.c-neutre{stroke:var(--bleu)}
+.gauge text{fill:var(--ink);font-family:"Barlow Condensed",Arial;font-weight:700}
+
+/* ------------- Tables ------------- */
+.tw{overflow:auto;border:1px solid var(--line);border-radius:11px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--surface3);color:var(--marine);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;z-index:2}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td.c,th.c{text-align:center}
+tbody tr:hover td{background:#f4f8fd}
+tfoot td{font-weight:700;background:var(--surface3)!important;border-top:2px solid var(--line2);border-bottom:0}
+td input,td select{width:100%;min-width:60px;border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:7px;text-align:right;font-variant-numeric:tabular-nums}
+td input:hover,td select:hover{border-color:var(--line2)}
+td input:focus,td select:focus{outline:none;border-color:var(--bleu);background:#fff;box-shadow:0 0 0 3px rgba(42,120,214,.15)}
+td input:disabled{color:var(--ink);opacity:1}
+th.grp{text-align:center;color:#fff;letter-spacing:.6px}
+th.grp.b{background:#2a78d6} th.grp.o{background:#c9560a} th.grp.g{background:#12855f}
+th.grp.v{background:#4a3aa7} th.grp.r{background:#b02c2c} th.grp.m{background:var(--marine)}
+tr.cur td{background:#fff8e9!important;box-shadow:inset 3px 0 0 var(--accent)}
+
+/* ------------- Boutons / formulaires ------------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;border-radius:10px;
+  padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;line-height:1;transition:.15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--marine);color:#fff}
+.btn-primary:hover{background:#0d3a70}
+.btn-ghost{background:#fff;color:var(--marine);border-color:var(--line2)}
+.btn-ghost:hover{background:var(--surface3)}
+.btn-warn{background:var(--warn);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icobtn{background:none;border:1px solid transparent;border-radius:8px;padding:3px 6px;cursor:pointer;font-size:15px;line-height:1;color:var(--faint)}
+.icobtn:hover{background:var(--warn-bg);border-color:#f0c4c4;color:var(--warn)}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:11.5px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--line2);border-radius:9px;background:#fff}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--bleu);box-shadow:0 0 0 3px rgba(42,120,214,.15)}
+.field .hint{font-size:11.5px;color:var(--faint)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;border:1px solid}
+.pill.sante{background:#e7f6ee;color:#0b7c45;border-color:#bfe6d1}
+.pill.secu{background:#e8f1fb;color:#1b4f8f;border-color:#c3daf5}
+.pill.env{background:#eef7e6;color:#3d6b1c;border-color:#cfe6b8}
+.pill.sys{background:#f0edfa;color:#4a3aa7;border-color:#d6cff0}
+.pill.res{background:#fdeee5;color:#a3401a;border-color:#f7d5c1}
+.pill.suivi{background:#eef2f7;color:#3d4b63;border-color:var(--line2)}
+.note{background:var(--mid-bg);border:1px solid #f0dcac;border-left:4px solid var(--mid);border-radius:10px;padding:11px 13px;font-size:13px;margin-bottom:14px;color:#6d5000}
+.note>b:first-child{display:block;margin-bottom:3px}
+.note.info{background:var(--info-bg);border-color:#c3daf5;border-left-color:var(--bleu);color:#1b4f8f}
+.empty{color:var(--faint);font-size:13px;padding:18px;text-align:center;border:1px dashed var(--line2);border-radius:10px}
+.editonly{display:none} body.edit .editonly{display:revert}
+figcaption{font-size:13.5px;font-weight:700;margin-bottom:2px;color:var(--ink)}
+.figsub{font-size:12px;color:var(--ink2);margin-bottom:9px}
+.legend{display:flex;gap:13px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:8px 0 2px;align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:11px;height:11px;border-radius:3px;flex:none}
+svg .grid line{stroke:#e8edf3}
+svg text{font-family:"Barlow",sans-serif;font-size:11px}
+svg text:not([style*="fill"]){fill:#6b7a8d}
+svg text.dl:not([style*="fill"]){fill:var(--ink)}
+svg text.dl{font-weight:700;font-size:10.5px}
+svg .target{stroke:var(--warn);stroke-width:1.5;stroke-dasharray:5 4}
+.tipbox{position:fixed;pointer-events:none;background:var(--navy);color:#fff;padding:8px 11px;border-radius:9px;
+  font-size:12.5px;line-height:1.4;z-index:100;opacity:0;transition:opacity .1s;box-shadow:var(--sh2);max-width:270px}
+.tipbox .k{color:#9fd8f5}
+.modal{position:fixed;inset:0;background:rgba(15,28,48,.55);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.sheet{background:#fff;border-radius:16px;width:100%;max-width:700px;max-height:92vh;overflow:auto;padding:20px;box-shadow:var(--sh2)}
+.sheet h3{font-size:16px;margin-bottom:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--marine)}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(18px);background:var(--navy);color:#fff;
+  padding:10px 16px;border-radius:11px;font-size:14px;opacity:0;pointer-events:none;transition:.22s;z-index:80;max-width:92%;text-align:center;box-shadow:var(--sh2)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ------------- Visionneuse certificat ------------- */
+#viewer{position:fixed;inset:0;background:rgba(10,24,48,.9);z-index:90;display:none;flex-direction:column}
+#viewer.open{display:flex}
+#viewer .vbar{display:flex;gap:8px;padding:10px 14px;align-items:center;color:#fff;flex-wrap:wrap}
+#viewer .vbar b{margin-right:auto;font-size:14px}
+#viewer .vstage{flex:1;overflow:auto;display:grid;place-items:center;padding:10px;cursor:grab}
+#viewer .vstage.drag{cursor:grabbing}
+#viewer img{max-width:none;transform-origin:center center;background:#fff;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#viewer .vbtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:9px;padding:7px 12px;cursor:pointer;font-weight:700;font-size:13px}
+#viewer .vbtn:hover{background:rgba(255,255,255,.26)}
+.certthumb{display:block;width:100%;max-width:150px;margin:8px auto 0;border:1px solid var(--line2);border-radius:8px;cursor:zoom-in;background:#fff}
+.certthumb:hover{box-shadow:var(--sh2)}
+
+/* ------------- Pictogrammes ------------- */
+.smi{width:30px;height:30px;border:0;background:none;cursor:pointer;padding:0;display:inline-grid;place-items:center;border-radius:50%;transition:.15s}
+.smi:hover{background:var(--surface3)}
+.smi svg{display:block}
+body:not(.edit) .smi{cursor:default}
+.objtbl td{white-space:normal;vertical-align:top}
+.objtbl td.c{white-space:nowrap;text-align:center}
+.objtbl textarea{width:100%;min-width:150px;background:#fff;border:1px solid transparent;border-radius:8px;font-size:12.5px;padding:5px 7px;resize:vertical}
+.objtbl textarea:hover{border-color:var(--line2)}
+.objtbl textarea:focus{outline:none;border-color:var(--bleu);box-shadow:0 0 0 3px rgba(42,120,214,.15)}
+.objtbl th.qcur,.objtbl td.qcur{background:#fff8e9}
+.objtbl th.qcur{background:#f3c98a;color:#5c3a00}
+.prop{display:inline-block;font-size:10px;font-weight:700;color:#946a00;background:var(--mid-bg);border:1px solid #f0dcac;border-radius:5px;padding:1px 5px;margin-top:4px}
+.bz{fill:#e8eef5;stroke:#b9c8da;stroke-width:1;cursor:pointer;transition:.15s}
+.bz:hover{fill:#cfe0f0}
+.bz.hit{stroke:var(--warn);stroke-width:1.6}
+
+/* ------------- Bulletin (trame CM3) ------------- */
+.bulwrap{background:#fff;color:#111;border-radius:10px;padding:8px;overflow:auto}
+.bulletin{width:1040px;margin:0 auto;font-family:"Calibri","Barlow",Arial,sans-serif;color:#111;background:#fff}
+.bul-head{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.bul-logo{width:130px;flex:none;display:grid;place-items:center}
+.bul-logo svg,.bul-logo img{width:100%;max-height:60px}
+.bul-band{flex:1;background:linear-gradient(90deg,#9dc3e6,#bdd7ee 55%,#deebf7);
+  clip-path:polygon(26px 0,100% 0,calc(100% - 26px) 100%,0 100%);padding:8px 40px;text-align:center}
+.bul-band .t1{font-size:23px;font-weight:700;font-style:italic;color:#1f3864;line-height:1.1}
+.bul-band .t2{font-size:19px;font-weight:700;font-style:italic;color:#1f3864}
+.bul-per{width:150px;flex:none;text-align:right;font-size:19px;font-weight:700;font-style:italic;color:#1f3864}
+.bul-r1{display:grid;grid-template-columns:1.25fr .85fr 1.1fr;gap:8px;margin-bottom:8px}
+.bx{border:3px solid #000;border-radius:12px;padding:7px 11px;min-height:96px}
+.bx.red{border-color:#e00000} .bx.blk{border-color:#000} .bx.grn{border-color:#00a650}
+.bx h4{text-align:center;font-size:14px;font-weight:700;text-decoration:underline;margin-bottom:5px}
+.bx.red h4{color:#c00000} .bx.grn h4{color:#00a650}
+.bx ul{margin:0;padding-left:6px;list-style:none}
+.bx li{font-size:13px;margin-bottom:3px;padding-left:16px;position:relative;line-height:1.28}
+.bx li::before{content:"❖";position:absolute;left:0;font-size:11px;top:1px}
+.bul-r2{display:grid;grid-template-columns:1.02fr 1fr;gap:8px;margin-bottom:8px}
+.bul-r3{display:grid;grid-template-columns:1.02fr 1fr;gap:8px}
+.panel{border:2.5px solid #000;border-radius:10px;padding:8px 10px;position:relative;background:#fff}
+.panel h5{text-align:center;font-size:14px;font-weight:700;color:#1f3864;margin:0 0 4px;padding-left:52px}
+.panel .smiley{position:absolute;left:8px;top:8px;width:46px;height:46px}
+.bul-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.bul-tbl td,.bul-tbl th{border:1px solid #7f7f7f;padding:3px 5px;text-align:center;color:#111;white-space:nowrap;background:#fff}
+.bul-tbl th{background:#f2f2f2;font-weight:700;font-size:12px;text-transform:none;letter-spacing:0;position:static}
+.bul-tbl td.lab{text-align:left;background:#ffff99;font-weight:600;font-size:11.5px}
+.bul-tbl td.lab small{font-weight:400;font-size:10.5px}
+.bul-tbl td.z{background:#ccffcc;font-weight:700}
+.bul-tbl td.nz{background:#ff0000;color:#fff;font-weight:700}
+.bul-tbl td.hi{background:#dbeef4;font-weight:700}
+.bul-tbl td.tx{background:#fcd5b4;text-align:left;font-weight:600;font-size:11.5px}
+.bul-note{font-size:14px;font-weight:700;font-style:italic;color:#c00000;text-align:center;margin-top:20px}
+.bul-note u{color:#111;font-style:normal;display:block;margin-bottom:12px;font-size:15px}
+.bul-foot{margin-top:8px;font-size:10.5px;color:#555;display:flex}
+.bulletin svg text{fill:#444} .bulletin svg text.dl{fill:#111}
+.bulletin svg .grid line{stroke:#ddd} .bulletin svg .target{stroke:#808080}
+
+@media print{
+  @page{size:A4 landscape;margin:6mm}
+  html,body{background:#fff!important;padding:0;color:#111}
+  header,nav.tabs,.noprint,#toast{display:none!important}
+  main{padding:0;max-width:none}
+  .card{border:0!important;box-shadow:none!important;padding:0;margin:0;background:#fff!important}
+  .bulwrap{padding:0;border-radius:0;overflow:visible}
+  .bulletin{width:100%}
+  .bulletin .bx{min-height:88px;padding:6px 10px}
+  .bulletin .bx li{font-size:12px;margin-bottom:2px}
+  .bulletin .panel{padding:6px 9px}
+  .bulletin .bul-tbl td,.bulletin .bul-tbl th{padding:2px 4px;font-size:11px}
+  .bulletin .bul-head{margin-bottom:5px}
+  .bulletin .bul-r1,.bulletin .bul-r2{margin-bottom:6px}
+  .pagebreak{break-before:page}
+  .prt table{font-size:9.5px;border-collapse:collapse}
+  .prt th,.prt td{border:1px solid #bbb;padding:3px 4px}
+  .prt th{background:#e8eef5!important;color:#111!important}
+}
+@media (max-width:960px){ .g4{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:700px){
+  header{padding:8px 12px}
+  .htit{width:100%;margin-right:0}
+  main{padding:12px 10px 6px}
+  .card{padding:13px}
+  .hero .v{font-size:46px}
+  .g4{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" id="hlogo"></div>
+  <div class="htit"><h1>Reporting HSE — CM3</h1><small>Saisie · consultation · affichage MASE</small></div>
+  <div class="selgrp" id="yearsel"></div>
+  <select class="hsel" id="moissel" title="Période affichée"></select>
+  <button class="hbtn" id="btnMode">🔒 Consultation</button>
+  <button class="hbtn" id="btnSync"><span class="dot" id="syncDot"></span> Sync</button>
+</header>
+<main id="app"></main>
+<nav class="tabs" id="tabs" role="tablist"></nav>
+<div class="tipbox" id="tip"></div>
+<div class="modal" id="modal"><div class="sheet" id="modalBox"></div></div>
+<div id="viewer"><div class="vbar"><b id="vTitle">Certificat</b>
+  <button class="vbtn" id="vOut">− Réduire</button><button class="vbtn" id="vIn">+ Agrandir</button>
+  <button class="vbtn" id="vFit">Ajuster</button><button class="vbtn" id="vClose">✕ Fermer</button></div>
+  <div class="vstage" id="vStage"><img id="vImg" alt="Certificat MASE"></div></div>
+<div id="toast"></div>
+<script>
+"use strict";
+/* =========================================================================
+   REPORTING HSE — CM3
+   Application unique de saisie / consultation / affichage des indicateurs SSE
+   Années couvertes : 2024, 2025, 2026
+   Sources : TABLEAU DE BORD 2024/2025/2026.xlsx, Politiques SSE 2024/2025/2026,
+             Bulletins HSE CM3, Manuel MASE CM3 V2 (déc. 2025)
+   ========================================================================= */
+
+const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const MOIS_C = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
+const TRIM = ["T1","T2","T3","T4"];
+
+/* Champ mensuel vide */
+function emptyMonth(m){
+  return {m:m,
+    eff:0,h:0,                       // effectif moyen, heures travaillées salariés
+    ataa:0,atsa:0,ben:0,traj:0,mort:0,jours:0,mp:0,   // accidentologie salariés
+    etpI:0,hI:0,atI:0,atST:0,        // intérim / sous-traitance
+    vigR:0,rem:0,                    // Vigiminutes réalisées (analyse de risque) / remontées terrain suivies
+    thS:0,thSe:0,thE:0,              // thèmes traités dans le mois : Santé / Sécurité / Environnement
+    qhpN:0,qhpE:0,qhpP:0,              // QHP réalisés / effectif concerné / participants
+    na:0,acc:0,                      // nouveaux arrivants / accueils sécurité
+    vms:0,vmsR:0,                    // visites terrain (VMS) / remontées issues des VMS
+    aud:0,nc:0,sanc:0,               // audits internes / non-conformités / courriers de sanction
+    form:0,formTxt:"",              // formations réalisées (nb) et leur détail
+    pdp:0,proto:0,evalP:0,bfc:0,     // plans de prévention / protocoles sécurité / éval. prestataires / bilans fin de chantier
+    flash:0,pa:0                     // flashs diffusés / avancement plan d'actions (%)
+  };
+}
+function months(seed){
+  const a=[]; for(let m=1;m<=12;m++){ const o=emptyMonth(m); Object.assign(o, (seed&&seed[m])||{}); a.push(o); }
+  return a;
+}
+
+/* ---- Données CM3 issues du classeur de collecte (retour du 19/08/2026) ---- */
+const M2024 = months({
+   1:{eff:10,h:1400,etpI:1,hI:72,jours:31,qhpN:1,qhpE:10,qhpP:11,thSe:1,vigR:4,vms:1,vmsR:2,pa:78},
+   2:{eff:10,h:1400,jours:29,qhpN:1,qhpE:10,qhpP:10,thSe:1,vigR:12,rem:2,vms:1,vmsR:2,pa:80},
+   3:{eff:9,h:1260,ben:1,jours:31,qhpN:1,qhpE:9,qhpP:10,thS:1,thSe:1,thE:1,vigR:20,vms:1,vmsR:1,evalP:3,bfc:1,pa:82},
+   4:{eff:9,h:1260,jours:30,qhpN:1,qhpE:9,qhpP:8,thSe:2,vigR:7,vms:1,vmsR:1,pa:84},
+   5:{eff:8,h:1120,jours:31,qhpN:1,qhpE:8,qhpP:9,thS:1,vigR:8,rem:1,vms:1,vmsR:3,pa:85},
+   6:{eff:9,h:1190,jours:2,qhpN:1,qhpE:9,qhpP:10,thS:1,thSe:1,thE:1,vigR:6,rem:2,vms:1,vmsR:3,sanc:2,pdp:3,pa:83},
+   7:{eff:9,h:1190,qhpN:1,qhpE:9,qhpP:10,thS:1,thE:1,rem:2,vms:1,vmsR:1,form:1,formTxt:"1 Formation Travail en Hauteur",pa:84},
+   8:{eff:9,h:1190,qhpN:1,vigR:14,rem:5,vms:1,vmsR:2,pa:85},
+   9:{eff:9,h:1190,qhpN:1,qhpE:9,qhpP:9,thSe:1,vigR:10,rem:2,vms:1,vmsR:1,form:4,formTxt:"2 Formations Chariot Elevateur\n1 Formation Travail en Hauteur\n1 Formation Pont Roulant",pa:84},
+  10:{eff:9,h:1190,qhpN:1,qhpE:9,qhpP:9,thSe:1,vigR:3,rem:2,vms:1,vmsR:1,aud:1,form:1,formTxt:"1 Formation PEMP Octobre",pdp:1,pa:76},
+  11:{eff:9,h:1190,qhpN:1,qhpE:9,qhpP:8,thS:1,thE:1,vigR:15,rem:1,vms:1,vmsR:2,form:2,formTxt:"1 Formation Chariot Elevateur\n1 Formation PEMP",pa:79},
+  12:{eff:9,h:1190,etpI:1,hI:104,qhpN:1,qhpE:9,qhpP:9,thSe:1,vigR:15,vms:1,vmsR:2,pdp:2,bfc:1,pa:82}
+});
+const M2025 = months({
+   1:{eff:11,h:1936,etpI:0.13,hI:24,qhpN:1,qhpE:11,qhpP:10,thE:1,rem:7,vms:1,vmsR:1,pdp:2,bfc:2,pa:80},
+   2:{eff:11,h:1760,qhpN:1,qhpE:11,qhpP:10,thS:1,thSe:1,thE:1,vigR:7,rem:1,vms:1,vmsR:1,pa:82},
+   3:{eff:11,h:1848,qhpN:1,qhpE:11,qhpP:10,thSe:1,vigR:6,rem:1,vms:1,vmsR:1,evalP:3,pa:84},
+   4:{eff:10,h:1680,qhpN:1,qhpE:10,qhpP:8,thS:1,thE:1,vigR:4,rem:3,vms:1,vmsR:1,bfc:1,pa:85},
+   5:{eff:10,h:1520,etpI:0.48,hI:80,qhpN:1,qhpE:10,qhpP:9,thSe:1,vigR:4,rem:5,pa:83},
+   6:{eff:9,h:1440,etpI:0.86,hI:144,qhpN:1,qhpE:9,qhpP:10,thS:1,vigR:2,rem:3,pdp:2,pa:84},
+   7:{eff:9,h:1584,etpI:0.22,hI:40,qhpN:1,qhpE:9,qhpP:10,thS:1,thSe:1,thE:1,vigR:1,rem:1,vms:1,vmsR:1,form:2,formTxt:"2 Formations Travail en Hauteur",bfc:1,pa:85},
+   8:{eff:9,h:1440,etpI:0.29,hI:48,qhpN:1,vigR:8,rem:1,vms:1,vmsR:2,pa:84},
+   9:{eff:9,h:1584,etpI:0.45,hI:80,qhpN:1,qhpE:9,qhpP:9,thSe:1,vigR:2,rem:1,vms:1,vmsR:1,form:4,formTxt:"1 Formation Chariot Elevateur\n1 Formation PEMP\n2 Formations SST",pa:82},
+  10:{eff:9,h:1656,etpI:1.52,hI:280,qhpN:1,qhpE:9,qhpP:9,thS:1,thSe:1,vigR:2,rem:2,vms:1,vmsR:1,form:1,formTxt:"1 Formation PEMP",pa:83},
+  11:{eff:9,h:1368,etpI:1.5,hI:240,qhpN:1,qhpE:9,qhpP:8,thS:1,vigR:2,rem:1,vms:1,vmsR:1,form:1,formTxt:"1 Formation Travail en Hauteur",bfc:1,pa:85},
+  12:{eff:9,h:1584,etpI:1.74,hI:320,qhpN:1,qhpE:9,qhpP:9,thSe:1,vigR:6,rem:1,vms:1,vmsR:2,aud:1,form:2,formTxt:"2 Formations SST",bfc:1,pa:79}
+});
+const M2026 = months({
+   1:{eff:9,h:1512,etpI:1.36,hI:240,atsa:1,qhpN:1,qhpE:9,qhpP:8,thSe:1,vigR:2,rem:2,vms:1,vmsR:1,pdp:2,bfc:1,pa:78},
+   2:{eff:9,h:1440,etpI:1.55,hI:248,ataa:1,jours:18,qhpN:1,qhpE:9,qhpP:7,thE:1,vigR:2,vms:1,vmsR:1,pa:76},
+   3:{eff:9,h:1440,etpI:0.73,hI:128,jours:31,qhpN:1,qhpE:9,qhpP:8,thS:1,thSe:1,vms:1,vmsR:2,pdp:1,evalP:3,pa:79},
+   4:{eff:9,h:1440,etpI:0.5,hI:88,jours:19,qhpN:1,qhpE:9,qhpP:9,thSe:1,vms:1,vmsR:2,pa:81},
+   5:{eff:9,h:1440,etpI:0.81,hI:136,qhpN:1,qhpE:9,qhpP:8,thS:1,thSe:1,thE:1,vigR:5,rem:5,vms:1,vmsR:2,pa:83},
+   6:{eff:9,h:1440,qhpN:1,qhpE:9,qhpP:8,thSe:1,vigR:5,rem:2,vms:1,vmsR:2,form:9,formTxt:"5 Recyclages Travail en Hauteur Harnais\n2 Recyclages PEMP\n2 Recyclages Chariot Elevateur",pdp:2,pa:84},
+   7:{eff:9,h:1440,qhpN:1,qhpE:9,qhpP:9,thS:1,vigR:13,rem:1,vms:1,vmsR:2,proto:5,bfc:1,pa:85},
+   8:{rem:2,bfc:1}
+});
+
+const EXTRAS_SRC = {
+  "2024":{vgpPct:100,vgpNb:13,sst:0,extincteurs:0,bruitForm:100,bruitEquip:100,ncCagoule:0,peintureST:30,campagnes:1,pollutions:0,ncDechets:0,ncStockage:0,sensibEnv:4,ncAudit:2,auditPA:9,auditPF:11,masePct:100},
+  "2025":{vgpPct:100,vgpNb:13,sst:50,extincteurs:90,bruitForm:0,bruitEquip:100,ncCagoule:0,peintureST:40,campagnes:0,pollutions:0,ncDechets:0,ncStockage:1,sensibEnv:4,ncAudit:3,auditPA:8,auditPF:10,masePct:100},
+  "2026":{vgpPct:100,vgpNb:13,sst:44,extincteurs:90,bruitForm:100,bruitEquip:100,ncCagoule:0,peintureST:60,campagnes:0,pollutions:0,ncDechets:0,ncStockage:1,sensibEnv:2,ncAudit:0,auditPA:0,auditPF:0,masePct:70}
+};
+const JSA_SRC = {
+  "2024":{valeur:379,ref:"18/12/2023",periode:"Année 2024"},
+  "2025":{valeur:730,ref:"18/12/2023",periode:"Année 2025"},
+  "2026":{valeur:171,ref:"10/02/2026",periode:"Juillet 2026"}
+};
+
+/* ------------------------------------------------- Objectifs de politique */
+function obj(o){
+  return Object.assign({dom:"Sécurité",lib:"",ind:"",cible:"",foh:"",
+    T1:{s:"",c:"",p:false},T2:{s:"",c:"",p:false},T3:{s:"",c:"",p:false},T4:{s:"",c:"",p:false},bilan:""},o);
+}
+/* Pré-remplissage des analyses trimestrielles.
+   p:true = proposition générée pour gagner du temps, à valider par le pilote SSE. */
+function applyQ(list, grid){
+  grid.forEach((q,i)=>{ if(!list[i]) return;
+    ["T1","T2","T3","T4"].forEach((t,k)=>{
+      const v=q[k]; if(!v) return;
+      list[i][t]={s:v[0]||"", c:v[1]||"", p:true};
+    });
+    if(q[4]) list[i].bilan=q[4];
+  });
+  return list;
+}
+const OBJ2024 = [
+  obj({dom:"Santé",lib:"Prévention du risque lié aux fumées de soudure et aux maladies professionnelles associées",ind:"Nb d'actions de sensibilisation réalisées",cible:"1 action / an",foh:"Présentation des résultats de l'évaluation d'exposition aux fumées de soudure en QHP ; rappel des EPI obligatoires"}),
+  obj({dom:"Santé",lib:"Substitution du solvant de nettoyage (toluène)",ind:"Nb de réflexions / solutions de substitution étudiées",cible:"1 réflexion menée",foh:"Recherche de produits alternatifs moins nocifs et moins inflammables ; essais atelier"}),
+  obj({dom:"Santé",lib:"Formation SST",ind:"% du personnel formé SST",cible:"50 %",foh:"Plan de formation SST ; sessions organisme agréé"}),
+  obj({dom:"Sécurité",lib:"Développer la culture sécurité — thématique mensuelle en QHP",ind:"% de collaborateurs ayant participé aux QHP",cible:"80 %",foh:"1 thème par mois choisi par le responsable QHSE ; support diffusé et QHP formalisées"}),
+  obj({dom:"Sécurité",lib:"Développer l'analyse de risque via la fiche Vigiminute",ind:"Nb de Vigiminutes réalisées",cible:"1 à chaque démarrage de chantier",foh:"Fiche Vigiminute par tâche ; rappel au lancement de chaque chantier"}),
+  obj({dom:"Sécurité",lib:"Maîtrise du risque incendie",ind:"% du personnel formé à la manipulation des extincteurs",cible:"50 %",foh:"Formation extincteurs ; réflexion détection et alerte incendie"}),
+  obj({dom:"Sécurité",lib:"Prévention des chutes de plain-pied",ind:"% de personnel sensibilisé / étude de réfection des sols",cible:"100 % sensibilisés",foh:"Flash et QHP dédiés ; étude de réparation des dégradations sol atelier + cour"}),
+  obj({dom:"Environnement",lib:"Récupération des eaux de pluie et réutilisation",ind:"Mise en place d'une solution de récupération",cible:"1 solution étudiée",foh:"Étude technique ; chiffrage"}),
+  obj({dom:"Environnement",lib:"Solution de nettoyage des cordons de soudure respectueuse de l'environnement",ind:"Nb de solutions testées",cible:"1 solution mise en œuvre",foh:"Test produit AB Cleaner ; retour utilisateurs"}),
+  obj({dom:"Culture HSE",lib:"Développer un slogan d'entreprise",ind:"Slogan diffusé",cible:"1 slogan",foh:"« Si tu chutes, c'est pas le pied » — affichage et déclinaison en flashs"}),
+  obj({dom:"Culture HSE",lib:"1 remontée par collaborateur et par mois — déploiement de l'outil de partage avec la Direction",ind:"Nb de remontées / collaborateur / mois",cible:"1 / collaborateur / mois",foh:"Déploiement de la Vigiminute dématérialisée ; retour systématique au collaborateur"})
+];
+const OBJ2025 = [
+  obj({dom:"Santé",lib:"Sensibiliser les collaborateurs aux risques liés aux fumées de soudure",ind:"1 action de sensibilisation réalisée / 0 NC sur le port des cagoules ventilées",cible:"1 action — 0 NC",foh:"Présentation des résultats d'évaluation des fumées de soudure lors d'un QHP ; rappel des EPI obligatoires",
+    bilan:"Remplacement de toutes les cagoules par des équipements à meilleur coefficient de protection. Contrôle interne sur le port des EPI. 0 NC sur le port de la cagoule pour les travaux de soudure exigeants. Rappel régulier en causerie sécurité.",T4:{s:"🙂",c:"Les résultats de la campagne d'exposition aux fumées de soudure n'ont pas encore été présentés en QHP (données à mettre à jour). Poursuivre le contrôle interne. Objectif reconduit en 2026."}}),
+  obj({dom:"Santé",lib:"Réduire l'exposition aux solvants dangereux",ind:"Nombre de solvants testés / validation d'un produit de substitution",cible:"2 formules testées",foh:"Tests de 2 formules alternatives au toluène ; essais atelier ; retour utilisateurs",
+    bilan:"1 solution alternative testée et mise en application. Le substitut est utilisé mais son pouvoir dégraissant est inférieur à celui du toluène ; il sera mis en œuvre pour les petites pièces.",T4:{s:"🙂",c:"Poursuivre les recherches sur les substituts du toluène. En parallèle, poursuivre l'utilisation du produit de substitution."}}),
+  obj({dom:"Santé",lib:"Développer les compétences en premiers secours",ind:"% de personnel formé SST",cible:"50 %",foh:"Plan de formation SST ; sessions organisme agréé (Proteg Habitat)",
+    bilan:"50 % des collaborateurs formés SST (4 collaborateurs). Voir les fiches de formation. Prestataire : Proteg Habitat.",T4:{s:"😀",c:"La part de collaborateurs formés SST est jugée suffisante à date."}}),
+  obj({dom:"Santé",lib:"Améliorer la propreté et réduire les poussières dans l'atelier",ind:"100 % des collaborateurs sensibilisés / mise en place d'un système d'aspiration",cible:"100 % — 1 système installé",foh:"Sensibilisation lors de réunions atelier ; étude et installation d'un système d'aspiration"}),
+  obj({dom:"Sécurité",lib:"Développer la culture sécurité par des thématiques mensuelles",ind:"% de collaborateurs ayant participé aux QHP",cible:"80 %",foh:"Organisation de Quart d'Heure Prévention mensuels"}),
+  obj({dom:"Sécurité",lib:"Encourager les remontées terrain via la Vigiminute digitale",ind:"Nombre de Vigiminutes réalisées",cible:"1 par collaborateur et par mois",foh:"Mise en place du système Vigiminute digital ; communication auprès des équipes"}),
+  obj({dom:"Sécurité",lib:"Renforcer la maîtrise du risque incendie",ind:"% de personnel formé extincteurs",cible:"50 %",foh:"Formation manipulation extincteurs ; exercice incendie"}),
+  obj({dom:"Environnement",lib:"Garantir un stockage sécurisé des produits chimiques",ind:"NC constatées sur le stockage des produits",cible:"0 NC",foh:"Sensibilisation ; rappel des règles de stockage sur rétention ; contrôles internes"}),
+  obj({dom:"Environnement",lib:"Améliorer la gestion des déchets",ind:"NC constatées sur le tri des déchets",cible:"0 NC",foh:"Sensibilisation ; rappel des règles de tri ; contrôles internes"}),
+  obj({dom:"Culture HSE",lib:"Développer la culture HSE dans l'entreprise",ind:"Création et diffusion d'un slogan HSE",cible:"1 slogan",foh:"Communication interne ; affichage ; intégration dans les QHP"})
+];
+const OBJ2026 = [
+  obj({dom:"Santé",lib:"Prévention du risque lié aux fumées de soudure et aux maladies professionnelles associées",ind:"Nb d'actions de sensibilisation réalisées ; NC sur le port des cagoules ventilées",cible:"1 action — 0 NC",foh:"Présentation des résultats de l'évaluation d'exposition en QHP ; contrôle interne du port des EPI ; rappel en causerie sécurité"}),
+  obj({dom:"Santé",lib:"Prévention du risque lié au bruit",ind:"% de collaborateurs équipés de protections auditives moulées ; % formés au risque bruit",cible:"100 % — 100 %",foh:"Campagne de prise d'empreintes auditives ; module de formation « bruit en milieu de travail » ; signalisation des zones bruyantes"}),
+  obj({dom:"Santé",lib:"Réduction de l'exposition aux produits chimiques (mise en peinture)",ind:"% des opérations de mise en peinture sous-traitées (thermolaquage)",cible:"≥ 60 % (40 % en 2025)",foh:"Sourcing d'un thermolaqueur ; révision des gammes de fabrication ; suivi des volumes sous-traités"}),
+  obj({dom:"Sécurité",lib:"Développer la culture sécurité — 1 thématique mensuelle en QHP",ind:"% de collaborateurs ayant bénéficié du QHP du mois",cible:"80 %",foh:"Planning annuel des thèmes ; supports QHP diffusés ; animation par les responsables d'atelier"}),
+  obj({dom:"Sécurité",lib:"Poursuivre les remontées terrain via la Vigiminute digitale",ind:"Nb de Vigiminutes réalisées ; nb de remontées prises en compte et suivies",cible:"1 Vigiminute/mois/collaborateur — ≥ 20 remontées/an",foh:"Formulaire digital ; fiche papier en salle de pause ; retour systématique au collaborateur ; report au plan d'actions"}),
+  obj({dom:"Sécurité",lib:"Consigne de prévention — respect des 3 points d'appui",ind:"Flash réalisé ; % de collaborateurs sensibilisés ; NC constatées en visite terrain",cible:"1 flash — 100 % — 0 NC",foh:"Flash sécurité dédié ; démonstration montée/descente d'engin ; point de contrôle intégré à la trame VMS"}),
+  obj({dom:"Sécurité",lib:"Rangement et organisation des postes de travail",ind:"Action de rangement réalisée ; % de collaborateurs sensibilisés",cible:"1 action — 100 %",foh:"Chantier de rangement des espaces de stockage des fournitures ; affichage ; slogan de l'année"}),
+  obj({dom:"Environnement",lib:"Gestion des déchets et stockage des produits chimiques",ind:"% de collaborateurs sensibilisés ; NC tri des déchets ; NC stockage sur rétention / armoire ignifugée",cible:"100 % — 0 NC — 0 NC",foh:"Rappel en QHP ; signalétique des bennes ; contrôle interne mensuel des rétentions et armoires"}),
+  obj({dom:"Culture HSE",lib:"Développer un slogan d'entreprise sur une thématique particulière",ind:"Slogan créé et diffusé",cible:"1 slogan",foh:"« Une place pour chaque chose, chaque chose à sa place » — affichage atelier, déclinaison en flashs mensuels"})
+];
+
+/* ---- Analyses trimestrielles pré-remplies (propositions à valider) ---- */
+applyQ(OBJ2024,[
+ [["🙂","Cagoules ventilées disponibles ; rappel du port en causerie. Résultats de la campagne d'exposition non encore présentés."],
+  ["🙂","Support de présentation des résultats préparé avec le cabinet conseil."],
+  ["😀","Action de sensibilisation réalisée en QHP : résultats de l'exposition aux fumées de soudure présentés à l'équipe."],
+  ["😀","Aucune non-conformité relevée sur le port de la cagoule ventilée."],
+  "Action de sensibilisation réalisée. Objectif atteint et reconduit en 2025 avec une cible de 0 NC sur le port de la cagoule."],
+ [["😐","Recensement des usages du toluène à l'atelier ; recherche de substituts engagée."],
+  ["🙂","Deux pistes identifiées auprès des fournisseurs."],
+  ["🙂","Essais atelier de la solution AB Cleaner sur cordons de soudure."],
+  ["🙂","Retour utilisateurs favorable sur les petites pièces."],
+  "Réflexion menée comme prévu : solution AB Cleaner identifiée et testée. Décision de généralisation reportée à 2025."],
+ [["😐","Besoin identifié : 2 SST supplémentaires pour atteindre 50 % de l'effectif."],
+  ["😐","Devis organisme de formation demandés."],
+  ["🙂","Session programmée avec Proteg'Formation."],
+  ["😟","Session non tenue sur l'exercice faute de disponibilité des collaborateurs."],
+  "Objectif non atteint : aucun collaborateur formé SST sur 2024. Formation reportée sur 2025, où l'objectif de 50 % sera tenu."],
+ [["😀","3 QHP animés, participation de 100 % en janvier et février puis 111 % en mars."],
+  ["😀","3 QHP animés, participation moyenne de 89 % sur le trimestre."],
+  ["🙂","3 QHP animés ; août sans relevé de participation."],
+  ["😀","3 QHP animés, participation de 89 à 100 %."],
+  "12 QHP animés sur l'année, participation moyenne de 94,5 % pour une cible de 80 %. 18 thèmes traités couvrant les trois domaines. Objectif dépassé."],
+ [["😀","36 Vigiminutes réalisées au premier trimestre, une à chaque démarrage de chantier."],
+  ["😀","21 Vigiminutes réalisées ; réflexe acquis par les équipes."],
+  ["🙂","Baisse en juillet (congés) puis reprise en août et septembre : 24 Vigiminutes."],
+  ["😀","33 Vigiminutes sur le dernier trimestre."],
+  "114 Vigiminutes réalisées sur l'année, une à chaque démarrage de chantier. Objectif atteint."],
+ [["😐","Recensement des extincteurs et de leurs échéances de vérification."],
+  ["😐","Devis formation manipulation extincteurs demandé."],
+  ["🙂","Consultation d'installateurs pour un système de détection et d'alerte incendie."],
+  ["😐","Formation extincteurs non tenue sur l'exercice."],
+  "Réflexion sur la détection incendie menée. Formation extincteurs reportée sur 2025, où 90 % de l'effectif sera formé."],
+ [["😀","Flash « Chutes de plain-pied » diffusé et sensibilisation de 100 % des collaborateurs."],
+  ["🙂","Relevé des dégradations du sol atelier et de la cour."],
+  ["🙂","Devis de réfection demandés."],
+  ["🙂","Travaux chiffrés, non engagés sur l'exercice."],
+  "Volet sensibilisation atteint : 100 % du personnel sensibilisé. L'étude de réfection des sols est faite, les travaux restent à programmer."],
+ [["😐","Étude de faisabilité d'une récupération des eaux de pluie lancée."],
+  ["😐","Point de collecte et volumes à définir."],
+  ["😐","Chiffrage en attente."],
+  ["😟","Aucune solution retenue sur l'exercice."],
+  "Objectif non abouti. À arbitrer en revue de direction : soit relancer l'étude avec un chiffrage ferme, soit retirer l'objectif de la politique."],
+ [["😐","Recherche d'une solution de nettoyage des cordons respectueuse de l'environnement."],
+  ["🙂","Solution AB Cleaner identifiée."],
+  ["🙂","Essais en atelier, retour utilisateurs positif sur les petites pièces."],
+  ["🙂","Mise en œuvre partielle validée."],
+  "Solution mise en œuvre pour les petites pièces. Généralisation à étudier en 2025."],
+ [["😀","Slogan « Si tu chutes, c'est pas le pied » créé et affiché à l'atelier."],
+  ["😀","Décliné dans les flashs et les QHP du semestre."],
+  ["😀","Slogan repris lors des accueils sécurité."],
+  ["😀","Slogan porté toute l'année."],
+  "Objectif atteint : slogan créé, affiché et décliné dans l'ensemble des supports d'animation."],
+ [["🙂","Vigiminute dématérialisée présentée aux équipes ; flash « Vigilance partagée » diffusé. 2 remontées suivies."],
+  ["🙂","Outil de partage avec la Direction en place. 3 remontées suivies."],
+  ["🙂","Rappel de la Vigiminute en version digitale par flash. 9 remontées suivies."],
+  ["🙂","3 remontées suivies sur le dernier trimestre."],
+  "17 remontées prises en compte au plan d'actions pour 21 attendues (80 %). Outil déployé et adopté ; le rythme reste à consolider en 2025."]
+]);
+
+applyQ(OBJ2025,[
+ [["🙂","Cagoules remplacées par des équipements à meilleur coefficient de protection. Contrôle interne du port : aucune NC."],
+  ["🙂","Rappel régulier en causerie sécurité. Toujours 0 NC."],
+  ["😐","Présentation des résultats d'exposition repoussée : données à mettre à jour."],
+  ["🙂","0 NC sur le port de la cagoule confirmé en fin d'exercice."],
+  "0 NC sur le port de la cagoule ventilée. La présentation des résultats d'exposition n'a pas été faite — objectif reconduit en 2026."],
+ [["🙂","Première formule alternative au toluène testée en atelier."],
+  ["🙂","Retour utilisateurs : pouvoir dégraissant inférieur, adapté aux petites pièces."],
+  ["😐","Deuxième formule non testée faute de référence disponible."],
+  ["🙂","Substitut maintenu en usage sur les petites pièces."],
+  "1 solution testée et mise en application sur les petites pièces au lieu des 2 formules prévues. Recherches à poursuivre."],
+ [["😐","Recensement des besoins : 4 collaborateurs à former pour atteindre 50 %."],
+  ["🙂","Sessions programmées avec Proteg'Formation (Commercy)."],
+  ["😀","2 collaborateurs formés SST les 11 et 12 septembre 2025."],
+  ["😀","2 collaborateurs supplémentaires formés en décembre."],
+  "4 collaborateurs formés SST, soit 50 % de l'effectif. Objectif atteint ; la couverture est jugée suffisante pour l'atelier."],
+ [["😐","Sensibilisation au nettoyage des postes engagée en réunion atelier."],
+  ["🙂","100 % des collaborateurs sensibilisés au rangement et au nettoyage des postes."],
+  ["😐","Étude d'un système d'aspiration des poussières en cours de chiffrage."],
+  ["😐","Installation non engagée sur l'exercice."],
+  "Volet sensibilisation atteint (100 % des collaborateurs). L'installation d'un système d'aspiration reste à réaliser — à reprendre au plan d'actions."],
+ [["🙂","3 QHP animés, participation de 91 % sur le trimestre."],
+  ["🙂","3 QHP animés, participation de 90 %."],
+  ["🙂","3 QHP animés ; août sans relevé de participation."],
+  ["🙂","3 QHP animés, participation de 89 %."],
+  "12 QHP animés, participation moyenne de 87,9 % pour une cible de 80 %. 17 thèmes traités couvrant les trois domaines. Objectif atteint."],
+ [["😐","Lancement de la Vigiminute dématérialisée : 13 Vigiminutes et 9 remontées suivies au premier trimestre."],
+  ["😐","10 Vigiminutes et 11 remontées suivies."],
+  ["😐","11 Vigiminutes et 3 remontées suivies ; relance auprès des équipes."],
+  ["🙂","10 Vigiminutes et 4 remontées suivies sur le dernier trimestre."],
+  "44 Vigiminutes réalisées pour un objectif d'une par collaborateur et par mois : objectif non tenu. En revanche 27 remontées ont été prises en compte au plan d'actions pour 23 attendues (117 %). Le distinguo entre Vigiminute et remontée terrain est clarifié pour 2026."],
+ [["😐","Recensement des besoins de formation extincteurs."],
+  ["🙂","Session de formation manipulation extincteurs organisée."],
+  ["😀","90 % des collaborateurs formés à la manipulation des extincteurs."],
+  ["😀","Couverture maintenue en fin d'exercice."],
+  "90 % du personnel formé à la manipulation des extincteurs pour une cible de 50 %. Objectif largement dépassé."],
+ [["🙂","Contrôle interne des rétentions et de l'armoire ignifugée : conforme."],
+  ["😀","Stockage des aérosols en armoire ignifugée mis en place."],
+  ["😐","1 non-conformité relevée sur le stockage d'un produit hors rétention."],
+  ["🙂","Écart corrigé ; contrôle de suivi conforme."],
+  "1 NC relevée sur le stockage des produits chimiques pour une cible de 0. Objectif partiellement atteint, écart corrigé en fin d'exercice et reconduit en 2026."],
+ [["🙂","Rappel des règles de tri en réunion atelier."],
+  ["😀","Filière de traitement des DIS mise en place ; flash gestion des déchets diffusé."],
+  ["😀","Aucune NC relevée sur le tri."],
+  ["😀","0 NC confirmé sur l'exercice."],
+  "0 NC sur le tri des déchets et mise en place d'une filière de traitement des DIS. Objectif atteint. 4 actions de sensibilisation environnement menées."],
+ [["😀","Slogan de l'année créé et affiché."],
+  ["😀","Slogan repris dans les QHP et les communications internes."],
+  ["😀","Décliné lors de l'audit interne de certification."],
+  ["😀","Slogan porté toute l'année."],
+  "Objectif atteint : slogan créé, diffusé et repris dans l'ensemble des supports."]
+]);
+
+applyQ(OBJ2026,[
+ [["😐","Contrôle interne du port de la cagoule ventilée sur les travaux de soudure exigeants : aucune NC relevée. Présentation des résultats d'exposition non encore réalisée."],
+  ["🙂","Données d'exposition mises à jour avec le cabinet conseil ; support de QHP en préparation. Toujours 0 NC."],
+  ["🙂","QHP de présentation des résultats à programmer avant la revue de direction. Contrôle interne poursuivi, 0 NC à date."],
+  ["😐","À confirmer en clôture : réalisation effective de l'action de sensibilisation et maintien de 0 NC sur l'année."],
+  "À date : 0 NC sur le port de la cagoule ventilée. L'action de sensibilisation sur les résultats d'exposition reste à réaliser avant la fin de l'exercice — c'est le seul point ouvert de cet objectif."],
+ [["😐","Recensement de l'effectif concerné et consultation d'un audioprothésiste pour la prise d'empreintes."],
+  ["🙂","Campagne d'empreintes auditives lancée ; premiers bouchons moulés livrés."],
+  ["😀","100 % de l'effectif équipé de protections auditives moulées et 100 % sensibilisé au risque bruit par flash dédié."],
+  ["😀","Couverture à maintenir lors des arrivées de nouveaux collaborateurs."],
+  "Objectif atteint : 100 % de l'effectif équipé de protections auditives moulées et 100 % sensibilisé au risque bruit. Reste à intégrer la remise des bouchons moulés au parcours d'accueil."],
+ [["😐","Point de départ : 40 % des mises en peinture sous-traitées en 2025. Consultation de deux thermolaqueurs."],
+  ["🙂","Un prestataire retenu ; premières pièces confiées en thermolaquage."],
+  ["😀","60 % des opérations de mise en peinture sous-traitées : la cible est atteinte."],
+  ["😀","Part à maintenir sur le dernier trimestre."],
+  "Objectif atteint : 60 % des mises en peinture sont sous-traitées en thermolaquage, contre 40 % en 2025 et 30 % en 2024. L'exposition des collaborateurs aux produits de peinture est réduite d'autant."],
+ [["😐","3 QHP animés au premier trimestre, participation de 85 %."],
+  ["🙂","3 QHP animés, participation de 93 %."],
+  ["🙂","1 QHP animé en juillet, participation de 100 %. 10 thèmes traités à date sur les trois domaines."],
+  ["🙂","Poursuivre l'animation mensuelle jusqu'en décembre pour atteindre 12 QHP."],
+  "7 QHP animés à fin juillet, participation moyenne de 90,5 % pour une cible de 80 % : le taux de participation est tenu. 10 thèmes traités couvrant les trois domaines. Il reste 5 QHP à animer pour atteindre la cible annuelle de 12."],
+ [["😟","4 Vigiminutes réalisées et 2 remontées prises en compte au premier trimestre — rythme très insuffisant au regard de la cible de 21 remontées sur l'année."],
+  ["🙂","Reprise nette : 10 Vigiminutes et 7 remontées sur le trimestre après mise à disposition d'une fiche papier en salle de pause."],
+  ["😐","13 Vigiminutes en juillet ; 12 remontées cumulées à fin août pour 21 attendues sur l'année."],
+  ["😐","Maintenir le rythme du second semestre pour atteindre 21 remontées et assurer un retour systématique à l'émetteur."],
+  "27 Vigiminutes réalisées et 12 remontées prises en compte au plan d'actions à fin août, pour une cible annuelle de 21 remontées (3 par collaborateur concerné). Le rythme du second trimestre montre que la cible est atteignable ; le distinguo entre la Vigiminute, outil d'analyse de risque avant tâche, et la remontée terrain est maintenant acquis par les équipes."],
+ [["😟","Accident avec arrêt du 10/02/2026 : chute en descendant d'un chariot élévateur. Flash sécurité « 3 points d'appui » diffusé en réaction."],
+  ["🙂","100 % des collaborateurs sensibilisés ; point de contrôle « 3 points d'appui » ajouté à la trame de visite terrain."],
+  ["🙂","Aucune non-conformité relevée en visite terrain depuis la diffusion du flash. 7 visites réalisées à date."],
+  ["🙂","Confirmer 0 NC sur l'ensemble de l'exercice lors des dernières visites terrain."],
+  "Objectif en bonne voie malgré l'accident de février qui en est à l'origine : flash diffusé, 100 % des collaborateurs sensibilisés, point de contrôle intégré à la trame de visite terrain et aucune non-conformité relevée depuis. À confirmer sur le dernier trimestre."],
+ [["🙂","Slogan de l'année « Une place pour chaque chose, chaque chose à sa place » diffusé et affiché à l'atelier."],
+  ["🙂","Chantier de rangement des espaces de stockage des fournitures engagé ; zones de circulation dégagées."],
+  ["🙂","Sensibilisation de l'ensemble des collaborateurs aux bonnes pratiques de rangement des postes."],
+  ["🙂","Clôturer le chantier de rangement et vérifier la tenue dans la durée en visite terrain."],
+  "Action de rangement engagée et 100 % des collaborateurs sensibilisés. L'accident de février étant lié à un tube laissé au sol, c'est l'objectif le plus directement lié à la performance sécurité de l'exercice : le maintien dans la durée sera vérifié en visite terrain."],
+ [["🙂","Rappel des règles de tri et de stockage en QHP ; signalétique des bennes vérifiée."],
+  ["😀","Contrôle interne mensuel : 0 NC sur le tri des déchets."],
+  ["😐","1 non-conformité relevée sur le stockage d'un produit chimique hors rétention. Écart traité."],
+  ["😐","Confirmer 0 NC sur le stockage jusqu'à la clôture de l'exercice."],
+  "0 NC sur le tri des déchets, objectif tenu. 1 NC relevée sur le stockage des produits chimiques, corrigée : l'objectif de 0 NC sur ce volet n'est pas tenu à date. 2 actions de sensibilisation environnement menées."],
+ [["😀","Slogan d'entreprise créé et affiché à l'atelier."],
+  ["😀","Décliné dans les flashs mensuels et repris en QHP."],
+  ["😀","Slogan intégré aux supports d'accueil des nouveaux arrivants."],
+  ["😀","Bilan d'appropriation à faire en revue de direction."],
+  "Objectif atteint : slogan créé, affiché, décliné dans les flashs et les QHP et intégré au parcours d'accueil."]
+]);
+
+/* ------------------------------------------------------------ Accidents */
+const ACC2024 = [{type:"Accident Bénin",date:"2024-04-10",nom:"Eric SCHAFFER",cat:"Employés CDI",metier:"Chaudronnier",lieu:"Arcelor Contrisson",temoin:"Eric DIDIER",desc:"Projection d'une étincelle dans les yeux, passée sous les lunettes de protection lors d'une opération de meulage. Gêne oculaire.",bless:"Atteinte oculaire (irritation)",corps:"Yeux",risque:"Projection d'un corps étranger",cause:"Cause Technique : moyen de protection inadapté (lunettes insuffisantes)",jours:0,hipo:"Non",amenage:"Non",analyse:"Terminée",cpam:"Oui",actions:"Réflexion sur le port de la visière / lunettes-masque pour les opérations de meulage"}];
+const ACC2025 = [];
+const ACC2026 = [{type:"Accident avec Arrêt de Travail",date:"2026-02-10",nom:"Aurélien AUGUET",cat:"Employés CDI",metier:"Chaudronnier",lieu:"Atelier CM3",temoin:"",desc:"En descendant d'un chariot élévateur, le collaborateur a mis le pied sur un tube qui traînait au sol. Il s'est tordu la cheville droite — fracture de la cheville.",bless:"Lésions traumatiques (Entorse / Foulure / Luxation…)",corps:"Cheville",risque:"Chute de plain-pied",cause:"Cause Humaine : non-respect des consignes HSE",jours:68,hipo:"Non",amenage:"Non",analyse:"En cours",cpam:"Oui",actions:"Flash sécurité « 3 points d'appui » ; action de rangement des zones de circulation et de stockage (objectif 2026) ; rappel en QHP"}];
+
+/* ----------------------------------------------------- Bulletin / faits */
+const DB_SEED = {
+  meta:{app:"reporting-cm3",schema:2,updatedAt:"",device:""},
+  settings:{webhook:"",pass:"",device:"",autoSync:true,logo:""},
+  entreprise:{nom:"CM3",certif:"MASE — certificat n° EST 2023-2538",valide:"03/10/2023 → 02/10/2026",certifFin:"2026-10-02",
+    instance:"Comité de pilotage SSE (2 Directeurs + cabinet consultant SSE) — mensuel ; revue de direction annuelle"},
+  years:{
+    2024:{months:M2024,objectifs:OBJ2024,accidents:ACC2024,flashs:[],
+      politique:{slogan:"SI TU CHUTES, C'EST PAS LE PIED",titre:"Politique Santé, Sécurité, Environnement, Qualité 2024",
+        engagements:["Respect et maintien de l'intégrité physique des collaborateurs internes et externes","Respect de l'environnement","Respect de la législation en vigueur","Satisfaction de nos clients","Responsabilisation de nos collaborateurs dans les domaines QSSE"]},
+      faits:{sante:["Présentation du rapport d'exposition aux fumées de soudure","Sensibilisation au rangement du poste de travail"],
+             secu:["Flash « Chutes de plain-pied »","RETEX accident avec arrêt","Flash AT bénin — projection dans l'œil"],
+             env:["Test de la solution AB Cleaner pour le nettoyage des cordons de soudure"],
+             divers:["Nouvelle politique MASE diffusée","Flash gestion des AT","Flash vigilance partagée","Rappel de la Vigiminute en version digitale"]},
+      jourssansAT:{ref:"18/12/2023",valeur:0}},
+    2025:{months:M2025,objectifs:OBJ2025,accidents:ACC2025,flashs:[],
+      politique:{slogan:"PAS BESOIN DE METTRE LE FEU POUR FAIRE DES ÉTINCELLES AU TRAVAIL !",titre:"Politique Santé, Sécurité, Environnement, Qualité 2025",
+        engagements:["Respect et maintien de l'intégrité physique des collaborateurs internes et externes","Respect de l'environnement","Respect de la législation en vigueur","Satisfaction de nos clients","Responsabilisation de nos collaborateurs dans les domaines QSSE"]},
+      faits:{sante:["100 % des collaborateurs sensibilisés au nettoyage et au rangement des postes de travail","Formation Extincteurs pour tous les collaborateurs","4 collaborateurs formés SST (50 % de l'effectif)"],
+             secu:["Aucun événement accidentel avec arrêt sur l'année"],
+             env:["Flash gestion des déchets — mise en place d'une filière de traitement des DIS","Stockage des aérosols en armoire ignifugée"],
+             divers:["Lancement des remontées SSE terrain en version dématérialisée","Audit interne de certification MASE"]},
+      jourssansAT:{ref:"18/12/2023",valeur:730}},
+    2026:{months:M2026,objectifs:OBJ2026,accidents:ACC2026,flashs:[],
+      politique:{slogan:"UNE PLACE POUR CHAQUE CHOSE, CHAQUE CHOSE À SA PLACE.",titre:"Politique Santé, Sécurité, Environnement, Qualité 2026",
+        engagements:["Respect et maintien de l'intégrité physique des collaborateurs internes et externes","Respect de l'environnement","Respect de la législation en vigueur","Satisfaction de nos clients","Responsabilisation de nos collaborateurs dans les domaines QSSE"]},
+      faits:{sante:["Campagne de protections auditives moulées (objectif 100 % de l'effectif)"],
+             secu:["AT avec arrêt du 10/02/2026 : fracture de la cheville en descendant d'un chariot élévateur","Flash sécurité « 3 points d'appui »"],
+             env:["Charte d'engagement RSE obtenue dans le cadre de l'activité CM3","Mise en place d'une zone de stockage dédiée aux aérosols"],
+             divers:["Fiche de remontées terrain mise à disposition en salle de pause — 14 remontées prises en compte dans le plan d'actions","Planification de l'audit MASE 2026"]},
+      jourssansAT:{ref:"10/02/2026",valeur:171}}
+  }
+};
+
+
+/* ========================= LOGO CM3 (vectorisé) ========================= */
+const LOGO_CM3 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-label="CM3"><g transform="translate(0.000000,360.000000) scale(0.100000,-0.100000)" fill="#9a9a9a" stroke="none"> <path d="M6395 2829 c-22 -10 -62 -19 -88 -19 -61 0 -74 -7 -177 -97 -47 -40 -107 -92 -134 -116 -28 -23 -65 -55 -82 -72 -18 -16 -76 -66 -130 -110 -53 -44 -120 -100 -148 -125 -29 -25 -78 -65 -110 -90 -32 -25 -75 -61 -95 -80 -21 -19 -54 -48 -75 -64 -54 -41 -68 -80 -54 -151 8 -39 8 -66 1 -90 -9 -27 -8 -32 2 -28 21 7 55 -34 55 -66 0 -35 -22 -55 -55 -49 -29 6 -28 8 -14 -29 8 -20 11 -246 10 -783 -2 -534 1 -770 9 -808 l12 -52 628 0 629 0 5 53 c3 28 7 534 10 1122 5 1156 6 1124 -48 1144 -13 6 -27 14 -30 19 -7 12 22 52 37 52 20 0 47 55 47 93 0 20 -7 63 -16 96 -11 47 -13 69 -5 98 26 91 12 127 -62 158 -46 19 -72 18 -122 -6z m86 -309 c27 -15 24 -56 -6 -85 -29 -30 -51 -32 -65 -6 -14 28 -13 53 6 79 17 24 35 28 65 12z m-841 -646 c16 -47 6 -151 -17 -176 -19 -21 -39 -23 -49 -6 -10 16 -6 133 6 180 14 51 44 52 60 2z M1600 2809 c-182 -7 -246 -16 -425 -60 -180 -45 -259 -73 -387 -138 -240 -122 -425 -281 -560 -483 -15 -22 -34 -48 -42 -57 -21 -23 -101 -216 -116 -278 -6 -28 -25 -72 -41 -98 l-29 -46 0 -244 0 -245 29 -53 c16 -28 37 -81 46 -117 9 -36 25 -81 36 -100 10 -19 30 -60 44 -90 34 -74 125 -202 209 -295 64 -71 91 -95 235 -202 62 -46 192 -123 231 -137 14 -5 61 -23 105 -41 44 -18 111 -38 150 -44 38 -7 111 -28 161 -47 l92 -34 935 0 935 0 14 79 c11 56 13 97 6 142 -4 35 -7 90 -6 124 1 33 -2 98 -7 145 -7 77 -5 90 14 127 26 52 27 88 1 144 -26 59 -27 161 0 236 11 32 20 74 20 95 0 25 -7 45 -20 58 -36 36 -74 23 -151 -51 -31 -30 -100 -88 -153 -129 -86 -66 -148 -115 -374 -293 -30 -23 -71 -55 -92 -72 -98 -77 -156 -123 -195 -155 -23 -19 -66 -53 -95 -75 -106 -81 -206 -160 -254 -203 -36 -31 -56 -42 -75 -40 l-26 3 -2 1190 c-1 655 -5 1210 -8 1235 -14 104 36 131 109 59 83 -84 235 -228 411 -389 99 -91 229 -213 290 -271 108 -105 237 -223 285 -263 13 -12 74 -70 134 -129 88 -86 115 -107 135 -105 57 7 86 106 57 196 -15 43 -16 103 -15 483 2 274 7 462 14 510 13 84 10 133 -10 149 -14 12 -1331 19 -1615 9z"/> </g><g transform="translate(0.000000,360.000000) scale(0.100000,-0.100000)" fill="#e2001a" stroke="none"> <path d="M6875 3579 c-4 -12 -25 -41 -46 -64 -44 -47 -78 -117 -79 -157 0 -47 40 -131 83 -177 47 -49 147 -101 192 -101 39 1 112 34 148 68 41 38 62 85 82 178 25 115 17 143 -56 216 l-59 58 -129 0 c-124 0 -130 -1 -136 -21z M7282 3546 c4 -43 11 -62 36 -90 76 -87 65 -236 -26 -337 -41 -46 -44 -53 -39 -92 4 -31 14 -50 40 -72 52 -46 61 -70 61 -165 0 -79 -3 -90 -37 -153 -42 -78 -45 -95 -18 -128 19 -24 21 -24 228 -24 l208 0 58 28 c74 37 116 81 156 162 49 99 50 122 7 199 -20 36 -41 66 -46 66 -5 0 -25 15 -44 34 -51 48 -48 76 14 142 64 68 80 106 80 194 0 85 -30 154 -86 197 -20 15 -43 42 -51 60 l-13 33 -266 0 -266 0 4 -54z M6846 2925 c-57 -20 -108 -65 -135 -120 -20 -38 -25 -64 -25 -129 -1 -72 2 -87 27 -129 51 -86 186 -150 266 -127 54 15 138 69 165 105 41 54 56 98 56 168 0 57 -4 69 -37 117 -42 59 -39 57 -140 100 -78 33 -118 36 -177 15z M3647 2842 c-15 -4 -41 -20 -59 -37 -65 -62 -62 -25 -65 -830 l-3 -730 26 -52 c30 -62 119 -146 184 -175 25 -10 61 -34 80 -52 19 -18 58 -48 85 -67 28 -18 71 -52 96 -75 25 -23 56 -45 69 -49 39 -12 178 -111 263 -186 29 -25 76 -60 105 -78 48 -30 57 -33 94 -25 44 10 71 41 119 144 12 25 31 58 42 74 19 27 83 150 181 346 21 41 46 91 57 110 10 19 45 89 77 155 33 66 71 137 85 158 14 21 33 62 41 90 9 29 32 72 51 96 47 59 71 141 56 190 -10 35 -94 160 -155 233 -17 20 -48 58 -68 85 -21 26 -66 83 -100 127 -35 43 -76 98 -93 121 -16 24 -55 72 -86 107 -31 34 -64 77 -72 93 -9 17 -42 64 -74 105 -91 117 -70 112 -496 115 -199 1 -373 5 -387 8 -14 3 -37 2 -53 -1z M3543 945 c-27 -19 -38 -80 -23 -133 7 -29 24 -52 57 -79 25 -21 62 -54 82 -73 20 -20 62 -53 93 -74 32 -21 77 -55 100 -76 24 -20 61 -46 83 -58 22 -11 49 -29 59 -41 11 -12 27 -21 37 -21 10 0 40 -19 67 -42 154 -134 193 -158 253 -158 43 0 109 47 109 77 0 62 -118 204 -194 233 -33 12 -141 85 -189 127 -20 18 -40 33 -45 33 -4 0 -24 16 -46 34 -21 19 -52 38 -68 41 -16 4 -38 19 -49 35 -12 15 -38 37 -59 49 -21 11 -40 27 -43 35 -3 7 -37 34 -75 60 -74 49 -112 57 -149 31z M3554 542 c-29 -19 -34 -56 -34 -235 0 -101 3 -212 6 -246 l7 -61 378 0 c209 0 379 3 379 6 0 22 -48 78 -81 95 -22 11 -69 48 -107 82 -70 66 -154 125 -209 147 -18 6 -44 27 -58 46 -14 19 -43 43 -64 54 -21 10 -45 29 -53 42 -16 24 -112 78 -138 78 -8 0 -20 -4 -26 -8z"/> </g></svg>`;
+
+/* =========================== ÉTAT & PERSISTANCE =========================== */
+const STORE_KEY = "cm3-reporting-hse-v4";
+let mem=null;
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return mem; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){ mem=v; } }
+function deepMerge(base,over){
+  if(Array.isArray(base)) return Array.isArray(over)? over : base;
+  if(base && typeof base==="object"){
+    const out=Object.assign({},base);
+    if(over && typeof over==="object") for(const k of Object.keys(over)) out[k]=deepMerge(base[k],over[k]);
+    return out;
+  }
+  return (over===undefined)? base : over;
+}
+function loadDB(){
+  const raw=lsGet(STORE_KEY);
+  if(!raw) return JSON.parse(JSON.stringify(DB_SEED));
+  try{ return deepMerge(JSON.parse(JSON.stringify(DB_SEED)),JSON.parse(raw)); }catch(e){ return JSON.parse(JSON.stringify(DB_SEED)); }
+}
+let DB=loadDB();
+let STATE={year:2026, mois:null, trim:null, tab:"dash", edit:false, sync:{state:"idle",msg:"Données locales"}, zone:null};
+const YEARS=[2024,2025,2026];
+
+const EXTRA_DEF={
+  sst:0, extincteurs:0, bruitEquip:0, bruitForm:0, peintureST:0, campagnes:0,
+  ncCagoule:0, ncDechets:0, ncStockage:0, pollutions:0, sensibEnv:0,
+  ncAudit:0, auditPA:0, auditPF:0,
+  formTotal:0, vgpPct:0, vgpNb:0, masePct:0
+};
+function migrate(){
+  YEARS.forEach(y=>{
+    const Y=DB.years[y]; if(!Y) return;
+    Y.extras=Object.assign({},EXTRA_DEF,Y.extras||{});
+    Y.months.forEach(m=>{ ["qhpE","thS","thSe","thE","rem","proto"].forEach(k=>{ if(m[k]===undefined) m[k]=0; });
+      if(m.formTxt===undefined) m.formTxt=""; delete m.vigA; });
+    if(!Y.flashs) Y.flashs=[];
+    if(!Y.smileys) Y.smileys={flash:"",acc:"",qhp:"",rem:""};
+    if(!Y.periode) Y.periode=(y===2026? "Juillet 2026":"Année "+y);
+    Y.objectifs.forEach(o=>["T1","T2","T3","T4"].forEach(t=>{ if(!o[t]) o[t]={s:"",c:"",p:false}; if(o[t].p===undefined) o[t].p=false; }));
+  });
+  if(DB.settings.dirigeants===undefined) DB.settings.dirigeants=2;
+  if(DB.settings.remParPers===undefined) DB.settings.remParPers=3;
+  if(DB.settings.logo===undefined) DB.settings.logo="";
+  if(DB.settings.certif===undefined) DB.settings.certif="";
+  if(!DB.entreprise.certifFin) DB.entreprise.certifFin="2026-10-02";
+  const num=v=>(parseFloat(v)||0);
+  YEARS.forEach(y=>{ const src=EXTRAS_SRC[String(y)]; if(!src) return;
+    Object.keys(src).forEach(k=>{ if(!num(DB.years[y].extras[k])) DB.years[y].extras[k]=src[k]; });
+    const j=JSA_SRC[String(y)]; if(j){ if(!num(DB.years[y].jourssansAT.valeur)) DB.years[y].jourssansAT.valeur=j.valeur;
+      if(!DB.years[y].jourssansAT.ref) DB.years[y].jourssansAT.ref=j.ref;
+      if(!DB.years[y].periode) DB.years[y].periode=j.periode; }
+  });
+}
+migrate();
+function saveDB(silent){
+  DB.meta.updatedAt=new Date().toISOString();
+  lsSet(STORE_KEY,JSON.stringify(DB));
+  if(!silent && DB.settings.webhook && DB.settings.autoSync) queuePush();
+}
+function Y(){ return DB.years[STATE.year]; }
+
+/* ============================== CALCULS SSE ============================== */
+const n=v=>(typeof v==="number"&&isFinite(v))?v:(parseFloat(v)||0);
+function sum(a,f){ return a.reduce((x,b)=>x+n(f(b)),0); }
+function actifs(ms){ return ms.filter(m=>n(m.h)>0||n(m.eff)>0); }
+function rates(h,ataa,atsa,jours){
+  h=n(h);
+  return {tf1:h? n(ataa)*1e6/h:0, tf2:h? (n(ataa)+n(atsa))*1e6/h:0, tg:h? n(jours)*1e3/h:0};
+}
+/* Effectif concerné par les remontées = effectif du mois − dirigeants */
+function concernes(m){ return Math.max(0, n(m.eff)-n(DB.settings.dirigeants)); }
+
+/* totals(year, mIdx) — mIdx null = année entière, sinon index 0-11 */
+function totals(year, mIdx){
+  const y=DB.years[year]; if(!y) return null;
+  const all=y.months, ms=(mIdx==null)? all : [all[mIdx]];
+  const act=actifs(ms), x=y.extras;
+  const S=f=>sum(ms,f);
+  const t={
+    periode:(mIdx==null)?"année":MOIS[mIdx],
+    eff:act.length? sum(act,m=>m.eff)/act.length:0,
+    h:S(m=>m.h), hI:S(m=>m.hI), etpI:act.length? sum(act,m=>m.etpI)/act.length:0,
+    ataa:S(m=>m.ataa), atsa:S(m=>m.atsa), ben:S(m=>m.ben), traj:S(m=>m.traj), mort:S(m=>m.mort),
+    jours:S(m=>m.jours), mp:S(m=>m.mp), atI:S(m=>m.atI), atST:S(m=>m.atST),
+    vigR:S(m=>m.vigR), rem:S(m=>m.rem),
+    qhpN:S(m=>m.qhpN), qhpP:S(m=>m.qhpP),
+    thS:S(m=>m.thS), thSe:S(m=>m.thSe), thE:S(m=>m.thE),
+    na:S(m=>m.na), acc:S(m=>m.acc), vms:S(m=>m.vms), vmsR:S(m=>m.vmsR),
+    aud:S(m=>m.aud), nc:S(m=>m.nc), sanc:S(m=>m.sanc),
+    form:S(m=>m.form), pdp:S(m=>m.pdp), proto:S(m=>m.proto), evalP:S(m=>m.evalP), bfc:S(m=>m.bfc),
+    flash:S(m=>m.flash), nbMois:act.length
+  };
+  Object.assign(t, rates(t.h,t.ataa,t.atsa,t.jours));
+  let den=0,num=0;
+  ms.forEach(m=>{ if(n(m.qhpN)>0){ den+=(n(m.qhpE)||n(m.eff))*n(m.qhpN); num+=n(m.qhpP); } });
+  t.qhpTaux=den? num/den*100:0;
+  /* Remontées : cible = 3 par collaborateur concerné et par an */
+  const actAll=actifs(all);
+  t.concernes = actAll.length? sum(actAll,concernes)/actAll.length : 0;
+  t.remCibleAn = t.concernes * n(DB.settings.remParPers);
+  const part = (mIdx==null)? 1 : (actAll.length? 1/12 : 0);
+  t.remCible = (mIdx==null)? t.remCibleAn : t.remCibleAn/12;
+  t.remTaux = t.remCible? t.rem/t.remCible*100 : 0;
+  /* Diversité des thèmes : nombre de domaines couverts sur la période */
+  t.themes = t.thS+t.thSe+t.thE;
+  t.diversite = [t.thS,t.thSe,t.thE].filter(v=>v>0).length;
+  t.diversiteTaux = t.diversite/3*100;
+  const pa=ms.map(m=>n(m.pa)).filter(v=>v>0); t.pa=pa.length? pa[pa.length-1]:0;
+  t.evts=t.ataa+t.atsa+t.ben+t.traj+t.mort;
+  t.accTaux = t.na? t.acc/t.na*100 : (t.acc?100:0);
+  t.formNb   = (mIdx==null && n(x.formTotal))? n(x.formTotal) : t.form;   // total manuel s'il est saisi, sinon somme du détail
+  t.formTaux = 0;                       // plus de plan de formation chiffré dans le classeur
+  t.vgpTaux  = n(x.vgpPct);
+  /* Avancement annuel du programme SSE : moyenne des composantes renseignées,
+     chacune plafonnée à 100 % et rapportée à sa cible proratisée quand elle est cumulative. */
+  (function(){
+    const P=prorata(year), comps=[];
+    const add=(v,c,cum)=>{ if(c==null||c<=0) return; const cible=cum? c*P : c; if(cible<=0) return;
+      comps.push(Math.min(100, n(v)/cible*100)); };
+    add(t.pa,100,false);
+    add(t.vgpTaux,100,false);
+    add(t.qhpN,12,true);
+    add(t.rem, t.remCibleAn,true);
+    add(t.vms,12,true);
+    add(t.aud,1,true);
+    add(t.flash,10,true);
+    t.avancement = comps.length? comps.reduce((a,b)=>a+b,0)/comps.length : 0;
+    t.avancementNb = comps.length;
+  })();
+  const A=(y.accidents||[]).filter(a=> mIdx==null? true : (new Date(a.date).getMonth()===mIdx));
+  t.nbEvt=A.length;
+  t.analTaux = A.length? A.filter(a=>a.analyse==="Terminée").length/A.length*100 : 0;
+  return t;
+}
+const yearTotals = y => totals(y,null);
+function rolling12Last(year){
+  const ch=[]; YEARS.forEach(yy=>{ if(DB.years[yy]) DB.years[yy].months.forEach((m,i)=>ch.push({y:yy,i:i,d:m})); });
+  let last=-1; ch.forEach((p,k)=>{ if(p.y===year&&(n(p.d.h)>0||n(p.d.eff)>0)) last=k; });
+  if(last<0) return {tf1:0,tf2:0,tg:0};
+  const w=ch.slice(Math.max(0,last-11),last+1);
+  return rates(sum(w,z=>z.d.h),sum(w,z=>z.d.ataa),sum(w,z=>z.d.atsa),sum(w,z=>z.d.jours));
+}
+function monthlySeries(year){
+  const y=DB.years[year], out=[]; let cA=0,cS=0,cJ=0,cH=0;
+  for(let i=0;i<12;i++){ const m=y.months[i];
+    cA+=n(m.ataa); cS+=n(m.atsa); cJ+=n(m.jours); cH+=n(m.h);
+    out.push({m:i+1,court:MOIS_C[i],d:m,cumul:rates(cH,cA,cS,cJ),actif:n(m.h)>0||n(m.eff)>0});
+  } return out;
+}
+const fmt=(v,d)=>(v==null||!isFinite(v))?"—":Number(v).toLocaleString("fr-FR",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});
+const pct=v=>(v==null||!isFinite(v))?"—":Number(v).toLocaleString("fr-FR",{maximumFractionDigits:1})+" %";
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2500); }
+function trimestreCourant(){
+  const d=new Date();
+  if(d.getFullYear()!==STATE.year) return null;
+  return "T"+(Math.floor(d.getMonth()/3)+1);
+}
+
+/* ============================== SVG / CHARTS ============================== */
+const TIP=()=>document.getElementById("tip");
+function tipOn(e,h){ const t=TIP(); t.innerHTML=h; t.style.opacity=1; tipMove(e); }
+function tipMove(e){ const t=TIP(), p=e.touches?e.touches[0]:e;
+  let x=p.clientX+14,y=p.clientY-10;
+  if(x+t.offsetWidth>innerWidth-8) x=p.clientX-t.offsetWidth-14; if(y<8) y=8;
+  t.style.left=x+"px"; t.style.top=y+"px"; }
+function tipOff(){ TIP().style.opacity=0; }
+function bindTip(el,h){
+  el.addEventListener("mouseenter",e=>tipOn(e,h)); el.addEventListener("mousemove",tipMove);
+  el.addEventListener("mouseleave",tipOff);
+  el.addEventListener("touchstart",e=>tipOn(e,h),{passive:true}); el.addEventListener("touchend",tipOff);
+}
+const NS="http://www.w3.org/2000/svg";
+function sv(t,a){ const e=document.createElementNS(NS,t); for(const k in(a||{})) e.setAttribute(k,a[k]); return e; }
+function el(h){ const d=document.createElement("div"); d.innerHTML=h.trim(); return d.firstElementChild; }
+function niceScale(max,prefInt){
+  if(!(max>0)) return {max:1,ticks:[0,1],dec:0};
+  const raw=max/4, mag=Math.pow(10,Math.floor(Math.log10(raw))), nz=raw/mag;
+  let step=(nz<=1?1:nz<=2?2:nz<=2.5?2.5:nz<=5?5:10)*mag;
+  if(prefInt&&step<1) step=1;
+  const top=Math.ceil(max/step)*step, ticks=[];
+  for(let v=0;v<=top+step/1e6;v+=step) ticks.push(+v.toFixed(6));
+  return {max:top,ticks:ticks,dec:step>=1?0:(step>=.1?1:2)};
+}
+function gauge(valPct,label,sub,cls){
+  const v=Math.max(0,Math.min(100,n(valPct))), C=2*Math.PI*42;
+  const d=document.createElement("div"); d.className="gaugebox";
+  const s=sv("svg",{viewBox:"0 0 100 100",class:"gauge"});
+  s.appendChild(sv("circle",{cx:50,cy:50,r:42,class:"gbg"}));
+  s.appendChild(sv("circle",{cx:50,cy:50,r:42,class:"gfg "+(cls||"c-neutre"),"stroke-dasharray":(C*v/100)+" "+C}));
+  const t=sv("text",{x:50,y:52,"text-anchor":"middle","font-size":"25"}); t.textContent=Math.round(v)+"%"; s.appendChild(t);
+  if(sub){ const t2=sv("text",{x:50,y:68,"text-anchor":"middle","font-size":"10","font-weight":"500",style:"fill:#6b7a8d"}); t2.textContent=sub; s.appendChild(t2); }
+  d.appendChild(s);
+  const l=document.createElement("div");
+  l.style.cssText="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink2);font-weight:700;margin-top:6px";
+  l.textContent=label; d.appendChild(l);
+  return d;
+}
+function gaugeCls(v,cible){ v=n(v); cible=n(cible)||100; if(!v) return "c-neutre"; return v>=cible?"c-ok":v>=cible*.75?"c-mid":"c-bad"; }
+function barChart(o){
+  const {labels,series,height=210,target=null,targetLabel="",directLabels=true,unit="",fmtV=(v)=>fmt(v,0),highlight=null}=o;
+  const W=Math.max(340,labels.length*(26*series.length+18)+60),H=height,PL=44,PR=14,PT=18,PB=26;
+  const iw=W-PL-PR, ih=H-PT-PB;
+  let raw=0,ai=true; series.forEach(s=>s.values.forEach(v=>{ if(n(v)>raw)raw=n(v); if(n(v)%1!==0)ai=false; }));
+  if(target!=null&&target>raw) raw=target;
+  const sc=niceScale(raw*1.05,ai), max=sc.max;
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",height:H,preserveAspectRatio:"xMinYMid meet",role:"img"});
+  const grp=iw/labels.length;
+  if(highlight!=null&&highlight>=0) svg.appendChild(sv("rect",{x:PL+grp*highlight,y:PT-6,width:grp,height:ih+8,fill:"#fff3dd",rx:5}));
+  const g=sv("g",{class:"grid"});
+  sc.ticks.forEach(yv=>{ const yy=PT+ih-ih*yv/max;
+    g.appendChild(sv("line",{x1:PL,x2:W-PR,y1:yy,y2:yy}));
+    const t=sv("text",{x:PL-6,y:yy+3.5,"text-anchor":"end"}); t.textContent=fmt(yv,sc.dec); g.appendChild(t); });
+  svg.appendChild(g);
+  const bw=Math.min(24,iw/labels.length/series.length-3);
+  labels.forEach((lab,i)=>{
+    const cx=PL+grp*i+grp/2, tw=bw*series.length+2*(series.length-1);
+    series.forEach((s,si)=>{
+      const v=n(s.values[i]), hh=Math.max(v>0?2:0, ih*v/max), x=cx-tw/2+si*(bw+2), y=PT+ih-hh;
+      const r=sv("rect",{x:x,y:y,width:bw,height:hh,rx:4,fill:s.color,stroke:"#fff","stroke-width":1});
+      svg.appendChild(r); bindTip(r,`<b>${esc(lab)}</b><br><span class="k">${esc(s.name)} :</span> ${fmtV(v)}${unit}`);
+      if(directLabels&&series.length<=2&&v>0){ const t=sv("text",{x:x+bw/2,y:y-4,"text-anchor":"middle",class:"dl"}); t.textContent=fmtV(v); svg.appendChild(t); }
+    });
+    const t=sv("text",{x:cx,y:H-8,"text-anchor":"middle"}); t.textContent=lab; svg.appendChild(t);
+  });
+  if(target!=null){ const yy=PT+ih-ih*target/max;
+    svg.appendChild(sv("line",{x1:PL,x2:W-PR,y1:yy,y2:yy,class:"target"}));
+    const t=sv("text",{x:W-PR,y:yy-5,"text-anchor":"end",class:"dl",style:"fill:#d03b3b"}); t.textContent=targetLabel||("Objectif "+fmtV(target)+unit); svg.appendChild(t); }
+  svg.appendChild(sv("line",{x1:PL,x2:W-PR,y1:PT+ih,y2:PT+ih,stroke:"#c3d1e0"}));
+  if(raw<=0) svg.dataset.empty="1";
+  return svg;
+}
+function stackChart(o){
+  const {labels,series,height=200,highlight=null}=o;
+  const W=Math.max(420,labels.length*46+70),H=height,PL=32,PR=12,PT=16,PB=50, iw=W-PL-PR, ih=H-PT-PB;
+  let raw=0; labels.forEach((l,i)=>{ let s=0; series.forEach(se=>s+=n(se.values[i])); if(s>raw)raw=s; });
+  const sc=niceScale(raw*1.12,true), max=sc.max;
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",height:H,preserveAspectRatio:"xMinYMid meet",role:"img"});
+  const grp=iw/labels.length;
+  if(highlight!=null&&highlight>=0) svg.appendChild(sv("rect",{x:PL+grp*highlight,y:PT-6,width:grp,height:ih+8,fill:"#fff3dd",rx:5}));
+  const g=sv("g",{class:"grid"});
+  sc.ticks.forEach(yv=>{ const yy=PT+ih-ih*yv/max;
+    g.appendChild(sv("line",{x1:PL,x2:W-PR,y1:yy,y2:yy}));
+    const t=sv("text",{x:PL-5,y:yy+3.5,"text-anchor":"end"}); t.textContent=fmt(yv,0); g.appendChild(t); });
+  svg.appendChild(g);
+  const bw=Math.min(30,grp-12);
+  labels.forEach((lab,i)=>{ const cx=PL+grp*i+grp/2; let acc=0;
+    series.forEach(se=>{ const v=n(se.values[i]); if(!v) return;
+      const hh=ih*v/max, y=PT+ih-ih*acc/max-hh;
+      const r=sv("rect",{x:cx-bw/2,y:y,width:bw,height:hh,fill:se.color,stroke:"#fff","stroke-width":1.5});
+      svg.appendChild(r); bindTip(r,`<b>${esc(lab)}</b><br>${esc(se.name)} : ${fmt(v,0)}`);
+      if(hh>13){ const t=sv("text",{x:cx,y:y+hh/2+4,"text-anchor":"middle",class:"dl","font-size":"11",style:"fill:#ffffff"}); t.textContent=v; svg.appendChild(t); }
+      acc+=v; });
+    const t=sv("text",{x:cx,y:PT+ih+13,"text-anchor":"end","font-size":"10",transform:`rotate(-38 ${cx} ${PT+ih+13})`}); t.textContent=lab; svg.appendChild(t);
+  });
+  svg.appendChild(sv("line",{x1:PL,x2:W-PR,y1:PT+ih,y2:PT+ih,stroke:"#c3d1e0"}));
+  if(raw<=0) svg.dataset.empty="1";
+  return svg;
+}
+function lineChart(o){
+  const {labels,values,color="#2a78d6",height=190,fmtV=(v)=>fmt(v,1),name="",unit=""}=o;
+  const W=Math.max(340,labels.length*46+70),H=height,PL=50,PR=16,PT=18,PB=26, iw=W-PL-PR, ih=H-PT-PB;
+  let raw=0,ai=true; values.forEach(v=>{ if(n(v)>raw)raw=n(v); if(n(v)%1!==0)ai=false; });
+  const sc=niceScale(raw*1.1,ai), max=sc.max;
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",height:H,preserveAspectRatio:"xMinYMid meet",role:"img"});
+  const g=sv("g",{class:"grid"});
+  sc.ticks.forEach(yv=>{ const yy=PT+ih-ih*yv/max;
+    g.appendChild(sv("line",{x1:PL,x2:W-PR,y1:yy,y2:yy}));
+    const t=sv("text",{x:PL-6,y:yy+3.5,"text-anchor":"end"}); t.textContent=fmt(yv,sc.dec); g.appendChild(t); });
+  svg.appendChild(g);
+  const X=i=>PL+(labels.length>1? iw*i/(labels.length-1):iw/2), Yv=v=>PT+ih-ih*n(v)/max;
+  const gid="g"+Math.abs(name.length*31+labels.length*7+Math.round(raw*10));
+  const defs=sv("defs"), lg=sv("linearGradient",{id:gid,x1:"0",y1:"0",x2:"0",y2:"1"});
+  lg.appendChild(sv("stop",{offset:"0%","stop-color":color,"stop-opacity":".22"}));
+  lg.appendChild(sv("stop",{offset:"100%","stop-color":color,"stop-opacity":"0"}));
+  defs.appendChild(lg); svg.appendChild(defs);
+  let d=""; values.forEach((v,i)=>{ d+=(i?" L":"M")+X(i)+" "+Yv(v); });
+  svg.appendChild(sv("path",{d:d+" L"+X(values.length-1)+" "+(PT+ih)+" L"+X(0)+" "+(PT+ih)+" Z",fill:"url(#"+gid+")",stroke:"none"}));
+  svg.appendChild(sv("path",{d:d,fill:"none",stroke:color,"stroke-width":2.4,"stroke-linejoin":"round","stroke-linecap":"round"}));
+  values.forEach((v,i)=>{ const c=sv("circle",{cx:X(i),cy:Yv(v),r:4.5,fill:color,stroke:"#fff","stroke-width":2});
+    svg.appendChild(c); bindTip(c,`<b>${esc(labels[i])}</b><br><span class="k">${esc(name)} :</span> ${fmtV(v)}${unit}`); });
+  labels.forEach((l,i)=>{ const t=sv("text",{x:X(i),y:H-8,"text-anchor":"middle"}); t.textContent=l; svg.appendChild(t); });
+  svg.appendChild(sv("line",{x1:PL,x2:W-PR,y1:PT+ih,y2:PT+ih,stroke:"#c3d1e0"}));
+  if(raw<=0) svg.dataset.empty="1";
+  return svg;
+}
+function hBar(o){
+  const {rows,color="#2a78d6",unit="",showPct=true}=o;
+  const rowH=27,W=580,H=Math.max(40,rows.length*rowH+14),PL=205,PR=72,iw=W-PL-PR;
+  const tot=rows.reduce((a,b)=>a+n(b.v),0);
+  let max=0; rows.forEach(r=>{ if(n(r.v)>max)max=n(r.v); }); max=max<=0?1:max;
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",height:H,preserveAspectRatio:"xMinYMin meet",role:"img"});
+  rows.forEach((r,i)=>{
+    const y=i*rowH+8,bh=16;
+    const t=sv("text",{x:PL-8,y:y+bh-3.5,"text-anchor":"end",class:"dl"});
+    t.textContent = r.k.length>32? r.k.slice(0,30)+"…" : r.k; svg.appendChild(t);
+    const w=Math.max(n(r.v)>0?3:0, iw*n(r.v)/max);
+    const rect=sv("rect",{x:PL,y:y,width:w,height:bh,rx:4,fill:r.color||color,stroke:"#fff","stroke-width":1});
+    svg.appendChild(rect); bindTip(rect,`<b>${esc(r.k)}</b><br>${fmt(r.v,0)}${unit}${showPct&&tot?" · "+pct(n(r.v)/tot*100):""}`);
+    const v=sv("text",{x:PL+w+7,y:y+bh-3.5,class:"dl"});
+    v.textContent=fmt(r.v,0)+unit+(showPct&&tot?"  ("+(n(r.v)/tot*100).toFixed(0)+" %)":""); svg.appendChild(v);
+  });
+  if(!rows.length||max<=0) svg.dataset.empty="1";
+  return svg;
+}
+function birdPyramid(t){
+  const rows=[
+    {k:"Décès",v:t.mort,c:"#8f1f1f"},
+    {k:"Accidents avec arrêt",v:t.ataa,c:"#d03b3b"},
+    {k:"Accidents sans arrêt",v:t.atsa,c:"#eb6834"},
+    {k:"Accidents bénins",v:t.ben,c:"#eda100"},
+    {k:"Remontées terrain suivies",v:t.rem,c:"#2a78d6"},
+    {k:"Vigiminutes (analyses de risque)",v:t.vigR,c:"#1baf7a"}
+  ];
+  const W=700,rowH=46,PAD=10,H=rows.length*rowH+PAD*2,WMIN=230,WMAX=640;
+  const svg=sv("svg",{viewBox:`0 0 ${W} ${H}`,width:"100%",height:H,preserveAspectRatio:"xMidYMin meet",role:"img"});
+  const step=(WMAX-WMIN)/(rows.length-1);
+  rows.forEach((r,i)=>{
+    const y=PAD+i*rowH,h=rowH-7, wT=WMIN+step*i, wB=WMIN+step*(i+1);
+    const pts=`${(W-wT)/2},${y} ${(W+wT)/2},${y} ${(W+wB)/2},${y+h} ${(W-wB)/2},${y+h}`;
+    const p=sv("polygon",{points:pts,fill:r.c,stroke:"#fff","stroke-width":2.5});
+    svg.appendChild(p); bindTip(p,`<b>${esc(r.k)}</b><br>${fmt(r.v,0)}`);
+    const ink = ["#eda100","#eb6834"].indexOf(r.c)>=0 ? "#3a2500" : "#ffffff";
+    const a=sv("text",{x:W/2-4,y:y+h/2+5,"text-anchor":"end","font-size":"17","font-weight":"700",style:"fill:"+ink}); a.textContent=fmt(r.v,0); svg.appendChild(a);
+    const b=sv("text",{x:W/2+6,y:y+h/2+5,"text-anchor":"start","font-size":"12","font-weight":"600",style:"fill:"+ink}); b.textContent=r.k; svg.appendChild(b);
+  });
+  return svg;
+}
+function fig(caption,sub,node,legend){
+  const f=document.createElement("figure"); f.style.margin="0";
+  f.innerHTML=`<figcaption>${esc(caption)}</figcaption>`+(sub?`<div class="figsub">${esc(sub)}</div>`:"");
+  if(legend&&legend.length){ const l=document.createElement("div"); l.className="legend";
+    l.innerHTML=legend.map(x=>`<span><i class="swatch" style="background:${x.color}"></i>${esc(x.name)}</span>`).join(""); f.appendChild(l); }
+  const w=document.createElement("div"); w.style.overflowX="auto"; w.appendChild(node); f.appendChild(w);
+  if(node.dataset&&node.dataset.empty==="1"){ const e=document.createElement("div"); e.className="empty"; e.style.marginTop="-4px"; e.textContent="Aucune donnée saisie sur cette période."; f.appendChild(e); }
+  return f;
+}
+
+/* ============================== PICTOGRAMMES ============================= */
+const STATUTS=[
+  {k:"",  lab:"Non évalué",           col:"#c3d1e0", face:"flat"},
+  {k:"😀",lab:"Objectif atteint",     col:"#2ee08a", face:"big"},
+  {k:"🙂",lab:"En bonne voie",        col:"#9ede4e", face:"smile"},
+  {k:"😐",lab:"Partiellement atteint",col:"#f0a72a", face:"flat"},
+  {k:"😟",lab:"Non atteint",          col:"#e0523c", face:"sad"}
+];
+const ST2K={good:"😀",mid:"😐",bad:"😟",nd:"",ok2:"🙂"};
+function smileySVG(k,size){
+  const s=STATUTS.find(x=>x.k===k)||STATUTS[0], d=size||26;
+  const mouth={big:"M 30 60 Q 50 82 70 60",smile:"M 32 62 Q 50 74 68 62",flat:"M 33 66 L 67 66",sad:"M 32 72 Q 50 54 68 72"}[s.face];
+  return `<svg viewBox="0 0 100 100" width="${d}" height="${d}" role="img" aria-label="${esc(s.lab)}">
+    <circle cx="50" cy="50" r="45" fill="${s.col}" stroke="rgba(0,0,0,.32)" stroke-width="3"/>
+    <circle cx="35" cy="40" r="8" fill="#fff"/><circle cx="65" cy="40" r="8" fill="#fff"/>
+    <circle cx="35" cy="41" r="4" fill="#12212f"/><circle cx="65" cy="41" r="4" fill="#12212f"/>
+    <path d="${mouth}" fill="none" stroke="#12212f" stroke-width="6" stroke-linecap="round"/></svg>`;
+}
+function picto(st,size){ return `<span title="${esc((STATUTS.find(x=>x.k===ST2K[st])||STATUTS[0]).lab)}">${smileySVG(ST2K[st]!==undefined?ST2K[st]:"",size||22)}</span>`; }
+/* Part de l'exercice écoulée, en mois révolus (0 → 1) */
+function prorata(year){
+  const now=new Date(), cy=now.getFullYear();
+  if(year<cy) return 1;
+  if(year>cy) return 0;
+  return Math.max(1/12, now.getMonth()/12);
+}
+function cibleADate(cibleAn,year){ return n(cibleAn)*prorata(year); }
+/* Statut d'un indicateur.
+   sens "max"   : ne pas dépasser (0 AT, 0 NC) — pas de temporalité
+   sens "min"   : niveau à atteindre (taux de couverture, %) — pas de temporalité
+   sens "cumul" : objectif annuel cumulatif (QHP, remontées, VMS…) — comparé à la cible PRORATISÉE */
+function statutDe(val,cible,sens,year){
+  if(!sens||cible==null) return "";
+  if(sens==="max") return n(val)<=n(cible)?"good":"bad";
+  if(!n(val)) return "nd";
+  let c=n(cible);
+  if(sens==="cumul"){ c=cibleADate(cible, year==null?STATE.year:year); if(c<=0) return "good"; }
+  if(c<=0) return "good";
+  const r=n(val)/c;
+  return r>=1?"good":(r>=.75?"mid":"bad");
+}
+/* Libellé « à date » pour un objectif cumulatif */
+function aDate(cibleAn,year){
+  const p=prorata(year==null?STATE.year:year);
+  if(p>=1) return "cible "+fmt(cibleAn,0)+" / an";
+  return "à date : "+fmt(cibleADate(cibleAn,year),0)+" sur "+fmt(cibleAn,0)+" / an";
+}
+function domPill(d){
+  const k={"Santé":"sante","Sécurité":"secu","Environnement":"env","Culture HSE":"sys","Système":"sys"}[d]||"sys";
+  return `<span class="pill ${k}">${esc(d)}</span>`;
+}
+function kpi(lab,val,sub,st){
+  const cls=st==="good"?"good":st==="mid"?"mid":st==="bad"?"bad":"";
+  return `<div class="kpi ${cls}">${st?`<span class="pic">${picto(st,20)}</span>`:""}
+    <div class="l">${lab}</div><div class="v">${val}</div>${sub?`<div class="s">${sub}</div>`:""}</div>`;
+}
+function delta(cur,prev){
+  if(prev==null||!isFinite(prev)) return "";
+  const d=n(cur)-n(prev);
+  if(Math.abs(d)<0.05) return `<span class="delta flat">= vs N-1</span>`;
+  return `<span class="delta ${d>0?"up":"down"}">${d>0?"▲":"▼"} ${fmt(Math.abs(d),Math.abs(d)<10?1:0)} vs N-1</span>`;
+}
+function joursRestants(iso){ if(!iso) return null; const d=new Date(iso); if(isNaN(d)) return null; return Math.round((d-new Date())/86400000); }
+
+/* ========================= VISIONNEUSE CERTIFICAT ======================== */
+let vZoom=1;
+function openViewer(src,titre){
+  if(!src){ toast("Aucun certificat enregistré — ajoutez-le dans les Réglages."); return; }
+  const v=document.getElementById("viewer"), im=document.getElementById("vImg");
+  document.getElementById("vTitle").textContent=titre||"Certificat MASE";
+  im.src=src; vZoom=1; im.style.width="auto"; im.style.maxHeight="calc(100vh - 120px)";
+  v.classList.add("open");
+}
+function zoomViewer(f){
+  const im=document.getElementById("vImg");
+  if(f===0){ vZoom=1; im.style.width="auto"; im.style.maxHeight="calc(100vh - 120px)"; return; }
+  vZoom=Math.max(.4,Math.min(6,vZoom*f));
+  im.style.maxHeight="none"; im.style.width=(im.naturalWidth*vZoom)+"px";
+}
+
+/* ============================ INDICATEURS (allégés) ===================== */
+function indicateurs(year){
+  const t=yearTotals(year), y=DB.years[year], x=y.extras;
+  t.auditPA=n(x.auditPA);
+  const I=(dom,type,lib,val,raw,cible,cv,sens,src)=>({dom,type,lib,val,raw,cible,cv,sens,src,st:statutDe(raw,cv,sens,year)});
+  return [
+    /* --- SÉCURITÉ : résultat --- */
+    I("Sécurité","Résultat","Accidents du travail avec arrêt",fmt(t.ataa,0),t.ataa,"0",0,"max","Saisie mensuelle"),
+    I("Sécurité","Résultat","Accidents du travail sans arrêt",fmt(t.atsa,0),t.atsa,"0",0,"max","Saisie mensuelle"),
+    I("Sécurité","Résultat","Accidents bénins",fmt(t.ben,0),t.ben,"0",0,"max","Saisie mensuelle"),
+    I("Sécurité","Résultat","Journées d'arrêt",fmt(t.jours,0),t.jours,"≤ 20",20,"max","Saisie mensuelle"),
+    I("Sécurité","Résultat","Taux de fréquence TF1",fmt(t.tf1,2),t.tf1,"0",0,"max","Calcul automatique"),
+    I("Sécurité","Résultat","Taux de fréquence TF2",fmt(t.tf2,2),t.tf2,"0",0,"max","Calcul automatique"),
+    I("Sécurité","Résultat","Taux de gravité TG",fmt(t.tg,2),t.tg,"0",0,"max","Calcul automatique"),
+    I("Sécurité","Résultat","Événements analysés",pct(t.analTaux),t.analTaux,"100 %",100,"min","Registre accidentologie"),
+    /* --- SÉCURITÉ : suivi --- */
+    I("Sécurité","Suivi","QHP réalisés",fmt(t.qhpN,0),t.qhpN,"12 / an",12,"cumul","Saisie mensuelle"),
+    I("Sécurité","Suivi","Participation aux QHP",pct(t.qhpTaux),t.qhpTaux,"80 %",80,"min","Calcul automatique"),
+    I("Sécurité","Suivi","Diversité des thèmes",fmt(t.diversite,0)+" / 3",t.diversite,"3 domaines",3,"min","Saisie mensuelle"),
+    I("Sécurité","Suivi","Vigiminutes réalisées",fmt(t.vigR,0),t.vigR,"—",null,null,"Saisie mensuelle"),
+    I("Sécurité","Suivi","Remontées terrain suivies",fmt(t.rem,0),t.rem,fmt(t.remCibleAn,0)+" / an",t.remCibleAn,"cumul","Saisie mensuelle"),
+    I("Sécurité","Suivi","Visites terrain / VMS",fmt(t.vms,0),t.vms,"12 / an",12,"cumul","Saisie mensuelle"),
+    I("Sécurité","Suivi","Flashs SSE diffusés",fmt(t.flash,0),t.flash,"10 / an",10,"cumul","Saisie mensuelle"),
+    /* --- SANTÉ --- */
+    I("Santé","Résultat","Maladies professionnelles reconnues",fmt(t.mp,0),t.mp,"0",0,"max","Saisie mensuelle"),
+    I("Santé","Résultat","Personnel formé au SST",pct(x.sst),x.sst,"50 %",50,"min","Bilan des formations"),
+    I("Santé","Résultat","Personnel formé aux extincteurs",pct(x.extincteurs),x.extincteurs,"50 %",50,"min","Bilan des formations"),
+    I("Santé","Résultat","Protections auditives moulées",pct(x.bruitEquip),x.bruitEquip,"100 %",100,"min","Santé au travail"),
+    I("Santé","Résultat","Personnel formé au risque bruit",pct(x.bruitForm),x.bruitForm,"100 %",100,"min","Bilan des formations"),
+    I("Santé","Résultat","NC « port des cagoules ventilées »",fmt(x.ncCagoule,0),x.ncCagoule,"0",0,"max","Santé au travail"),
+    I("Santé","Résultat","Mises en peinture sous-traitées",pct(x.peintureST),x.peintureST,"≥ 60 %",60,"min","Santé au travail"),
+    /* --- ENVIRONNEMENT --- */
+    I("Environnement","Résultat","Événements environnementaux",fmt(x.pollutions,0),x.pollutions,"0",0,"max","Bilan environnement"),
+    I("Environnement","Résultat","NC « tri des déchets »",fmt(x.ncDechets,0),x.ncDechets,"0",0,"max","Bilan environnement"),
+    I("Environnement","Résultat","NC « stockage des produits chimiques »",fmt(x.ncStockage,0),x.ncStockage,"0",0,"max","Bilan environnement"),
+    /* --- SYSTÈME --- */
+    I("Système","Suivi","Accueils sécurité des nouveaux arrivants",fmt(t.acc,0)+" / "+fmt(t.na,0),t.accTaux,"100 %",100,"min","Saisie mensuelle"),
+    I("Système","Suivi","Audits internes réalisés",fmt(t.aud,0),t.aud,"1 / an",1,"cumul","Saisie mensuelle"),
+    I("Système","Suivi","Formations réalisées",fmt(t.formNb,0),t.formNb,"—",null,null,"Détail des formations"),
+    I("Système","Suivi","Réalisation des VGP",pct(t.vgpTaux),t.vgpTaux,"100 %",100,"min","Compétences et VGP"),
+    I("Système","Résultat","Points d'amélioration en audit interne",fmt(t.auditPA,0),t.auditPA,"—",null,null,"Audit interne"),
+    I("Système","Résultat","Avancement annuel du programme SSE",pct(t.avancement),t.avancement,"100 %",100,"min","Calcul automatique"),
+    I("Système","Résultat","NC relevées en audit interne",fmt(x.ncAudit,0),x.ncAudit,"0",0,"max","Bilan système"),
+    I("Système","Résultat","Avancement du plan d'actions",pct(t.pa),t.pa,"100 %",100,"min","Saisie mensuelle")
+  ];
+}
+
+/* ============================ TABLEAU DE BORD =========================== */
+function viewDash(){
+  const y=Y(), x=y.extras, mi=STATE.mois;
+  const t=totals(STATE.year,mi), ta=yearTotals(STATE.year);
+  const app=document.createElement("div");
+  const P=prorata(STATE.year);
+  if(mi!=null) app.appendChild(el(`<div class="note info"><b>Vue mensuelle — ${MOIS[mi]} ${STATE.year}</b>Les compteurs portent sur ce seul mois. Les graphiques restent annuels, le mois sélectionné y est surligné. Repassez sur « Année entière » dans l'en-tête pour le cumul.</div>`));
+  else if(P<1) app.appendChild(el(`<div class="note info"><b>Exercice en cours — ${Math.round(P*12)} mois révolus sur 12</b>Les objectifs annuels cumulatifs (QHP, remontées, visites terrain, flashs, audits) sont comparés à leur cible <b>proratisée à date</b>, pas à la cible de fin d'année.</div>`));
+
+  /* --- Bandeau --- */
+  const band=document.createElement("div"); band.className="grid g4"; band.style.marginBottom="14px";
+  band.appendChild(el(`<div class="hero"><div class="l">Jours sans accident avec arrêt</div>
+    <div class="v">${fmt(y.jourssansAT.valeur,0)}</div><div class="s">Depuis le ${esc(y.jourssansAT.ref)}</div></div>`));
+  const b2=el(`<div class="kpi"></div>`); b2.appendChild(gauge(ta.qhpTaux,"Participation QHP","obj. 80 %",gaugeCls(ta.qhpTaux,80)));
+  b2.appendChild(el(`<div class="s" style="margin-top:4px">${fmt(ta.qhpN,0)} QHP · ${fmt(ta.diversite,0)}/3 domaines</div>`)); band.appendChild(b2);
+  const remC=cibleADate(ta.remCibleAn,STATE.year), remTx=remC? ta.rem/remC*100:0;
+  const b3=el(`<div class="kpi"></div>`); b3.appendChild(gauge(Math.min(remTx,100),"Remontées terrain",P<1?"à date":"sur l'année",gaugeCls(remTx,100)));
+  b3.appendChild(el(`<div class="s" style="margin-top:4px">${fmt(ta.rem,0)} sur ${fmt(remC,0)} attendues${P<1?" à date":""}<br>cible ${fmt(ta.remCibleAn,0)} / an</div>`)); band.appendChild(b3);
+  const j=joursRestants(DB.entreprise.certifFin);
+  const cert=el(`<div class="kpi"></div>`);
+  cert.appendChild(gauge(x.masePct,"Certification MASE","système",gaugeCls(x.masePct,100)));
+  cert.appendChild(el(`<div class="s" style="line-height:1.4;margin-top:4px">${esc(DB.entreprise.certif)}<br>
+    <b style="color:${j!=null&&j<120?"var(--warn)":"var(--ink)"}">${j==null?esc(DB.entreprise.valide):(j>0?"Échéance dans "+fmt(j,0)+" j":"Certificat échu")}</b></div>`));
+  if(DB.settings.certif) cert.appendChild(el(`<img class="certthumb" id="certTh" src="${esc(DB.settings.certif)}" alt="Certificat MASE" title="Cliquer pour agrandir">`));
+  else cert.appendChild(el(`<button class="btn btn-ghost" id="certAdd" style="margin-top:8px;padding:6px 10px;font-size:12px">📜 Ajouter le certificat</button>`));
+  band.appendChild(cert);
+  app.appendChild(band);
+
+  /* --- Objectifs de la politique, à date --- */
+  const qc=trimestreCourant(), qref=qc||"T4";
+  const cO=document.createElement("div"); cO.className="card c-v";
+  cO.innerHTML=`<h2><span class="bar"></span>Objectifs de la politique MASE — suivi à date (${qref})</h2>
+    <p class="sub">Appréciation portée sur le trimestre ${qc?"en cours":"de clôture"}. Le détail et les commentaires sont dans l'onglet « Objectifs SSE ».</p>`;
+  let ho=`<div class="tw"><table><thead><tr><th class="c" style="width:40px">${qref}</th><th>Objectif</th><th>Domaine</th><th>Cible</th><th>Analyse ${qref}</th></tr></thead><tbody>`;
+  y.objectifs.forEach(o=>{
+    ho+=`<tr><td class="c">${smileySVG(o[qref].s,26)}</td><td style="white-space:normal;max-width:300px"><b>${esc(o.lib)}</b></td>
+      <td>${domPill(o.dom)}</td><td style="white-space:normal;max-width:150px;font-size:12.5px">${esc(o.cible)}</td>
+      <td style="white-space:normal;max-width:430px;font-size:12.5px;color:var(--ink2)">${esc(o[qref].c)||"<span style='color:var(--faint)'>à compléter</span>"}${o[qref].p&&o[qref].c?' <span class="prop">proposition</span>':""}</td></tr>`;
+  });
+  cO.appendChild(el(ho+`</tbody></table></div>`));
+  app.appendChild(cO);
+
+  /* --- Sécurité --- */
+  const c1=document.createElement("div"); c1.className="card c-r";
+  c1.innerHTML=`<h2><span class="bar"></span>Sécurité — résultats${mi!=null?" · "+MOIS[mi]:""}</h2>
+    <p class="sub">TF1 = AT avec arrêt × 1 000 000 / heures travaillées · TF2 inclut les AT sans arrêt · TG = jours d'arrêt × 1 000 / heures travaillées.</p>`;
+  c1.appendChild(el(`<div class="kpigrid">
+    ${kpi("AT avec arrêt",fmt(t.ataa,0),"cible 0",statutDe(t.ataa,0,"max"))}
+    ${kpi("AT sans arrêt",fmt(t.atsa,0),"cible 0",statutDe(t.atsa,0,"max"))}
+    ${kpi("AT bénins",fmt(t.ben,0),"cible 0",statutDe(t.ben,0,"max"))}
+    ${kpi("Jours d'arrêt",fmt(t.jours,0),"cible ≤ 20",statutDe(t.jours,20,"max"))}
+    ${kpi("TF1",fmt(t.tf1,2),"cible 0",statutDe(t.tf1,0,"max"))}
+    ${kpi("TF2",fmt(t.tf2,2),"cible 0",statutDe(t.tf2,0,"max"))}
+    ${kpi("Taux de gravité",fmt(t.tg,2),"cible 0",statutDe(t.tg,0,"max"))}
+    ${kpi("Effectif moyen",fmt(t.eff,1),fmt(t.h,0)+" h travaillées")}
+  </div>`));
+  const ms=monthlySeries(STATE.year).filter(m=>m.actif), labs=ms.map(m=>m.court);
+  const g=el(`<div class="grid g2" style="margin-top:16px"></div>`);
+  g.appendChild(fig("TF2 cumulé","Cumul depuis janvier",lineChart({labels:labs,values:ms.map(m=>m.cumul.tf2),color:"#2a78d6",name:"TF2",fmtV:v=>fmt(v,0)})));
+  g.appendChild(fig("Taux de gravité cumulé","Jours d'arrêt pour 1 000 heures",lineChart({labels:labs,values:ms.map(m=>m.cumul.tg),color:"#eb6834",name:"TG",fmtV:v=>fmt(v,1)})));
+  c1.appendChild(g);
+  app.appendChild(c1);
+
+  /* --- Accidentologie : Bird + bonhomme --- */
+  const A=(y.accidents||[]).filter(a=> mi==null? true : (new Date(a.date).getMonth()===mi));
+  const cA=document.createElement("div"); cA.className="card c-r";
+  cA.innerHTML=`<h2><span class="bar"></span>Accidentologie — ${STATE.year}${mi!=null?" · "+MOIS[mi]:""}</h2>
+    <p class="sub">Pyramide de Bird et localisation des lésions. La base de la pyramide distingue les <b>Vigiminutes</b> (analyses de risque avant tâche) des <b>remontées terrain</b> reprises au plan d'actions.</p>`;
+  cA.appendChild(el(`<div class="kpigrid" style="margin-bottom:14px">
+    ${kpi("Événements enregistrés",fmt(A.length,0))}
+    ${kpi("Événements analysés",pct(t.analTaux),"cible 100 %",statutDe(t.analTaux,100,"min"))}
+    ${kpi("Maladies professionnelles",fmt(t.mp,0),"cible 0",statutDe(t.mp,0,"max"))}
+    ${kpi("Actions correctives",fmt(A.filter(a=>(a.actions||"").trim()).length,0),"issues des événements")}
+  </div>`));
+  const counts={}; A.forEach(a=>{ if(a.corps) counts[a.corps]=(counts[a.corps]||0)+1; });
+  const gA=el(`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start"></div>`);
+  gA.appendChild(fig("Pyramide de Bird","",birdPyramid(t)));
+  const bm=el(`<div><figcaption>Localisation des lésions</figcaption>
+    <div class="figsub">Cliquez sur une zone pour filtrer le registre ci-dessous.</div>
+    <div style="display:flex;justify-content:center">${bodyMap(counts)}</div></div>`);
+  gA.appendChild(bm);
+  cA.appendChild(gA);
+  if(STATE.zone) cA.appendChild(el(`<div class="row" style="margin-top:8px"><span class="pill secu">Filtre : ${esc(STATE.zone)}</span><button class="btn btn-ghost" id="zclr" style="padding:5px 10px;font-size:12px">Effacer le filtre</button></div>`));
+  const list=STATE.zone? A.filter(a=>a.corps===STATE.zone):A;
+  if(!list.length) cA.appendChild(el(`<div class="empty" style="margin-top:12px">Aucun événement ${STATE.zone?"pour cette zone":"enregistré"}.</div>`));
+  else{
+    let hr=`<div class="tw" style="margin-top:12px"><table><thead><tr><th>Date</th><th>Type</th><th>Collaborateur</th><th>Lieu</th><th>Blessure</th><th>Partie du corps</th><th class="n">Jours</th><th>Analyse</th></tr></thead><tbody>`;
+    list.forEach(a=>{ hr+=`<tr><td>${esc(a.date)}</td><td>${esc(a.type)}</td><td>${esc(a.nom)}</td><td>${esc(a.lieu)}</td><td>${esc((a.bless||"").slice(0,30))}</td><td>${esc(a.corps)}</td><td class="n">${fmt(a.jours,0)}</td><td>${esc(a.analyse)}</td></tr>`; });
+    cA.appendChild(el(hr+`</tbody></table></div>`));
+    list.forEach(a=>{ if(!a.desc) return;
+      cA.appendChild(el(`<div style="margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface2)">
+        <b style="font-size:13.5px;color:var(--marine)">${esc(a.date)} — ${esc(a.type)}${a.nom?" — "+esc(a.nom):""}</b>
+        <div style="font-size:13px;margin-top:4px">${esc(a.desc)}</div>
+        ${a.cause?`<div style="font-size:12.5px;color:var(--ink2);margin-top:4px"><b>Cause fondamentale :</b> ${esc(a.cause)}</div>`:""}
+        ${a.actions?`<div style="font-size:12.5px;color:var(--ink2);margin-top:2px"><b>Actions :</b> ${esc(a.actions)}</div>`:""}</div>`)); });
+    if(A.length>1){
+      const gR=el(`<div class="grid g2" style="margin-top:14px"></div>`);
+      gR.appendChild(fig("Par typologie de risque","",hBar({rows:countBy(A,"risque"),color:"#eb6834"})));
+      gR.appendChild(fig("Par cause fondamentale","",hBar({rows:countBy(A,"cause"),color:"#4a3aa7"})));
+      cA.appendChild(gR);
+    }
+  }
+  app.appendChild(cA);
+
+  /* --- Santé & Environnement --- */
+  const cSE=document.createElement("div"); cSE.className="card c-g";
+  cSE.innerHTML=`<h2><span class="bar"></span>Santé & Environnement — ${STATE.year}</h2>
+    <p class="sub">Les deux domaines exigés par le référentiel MASE au même titre que la sécurité.</p>`;
+  cSE.appendChild(el(`<div class="kpigrid" style="margin-bottom:14px">
+    ${kpi("Formés SST",pct(x.sst),"cible 50 %",statutDe(x.sst,50,"min"))}
+    ${kpi("Formés extincteurs",pct(x.extincteurs),"cible 50 %",statutDe(x.extincteurs,50,"min"))}
+    ${kpi("Protections auditives moulées",pct(x.bruitEquip),"cible 100 %",statutDe(x.bruitEquip,100,"min"))}
+    ${kpi("Formés au risque bruit",pct(x.bruitForm),"cible 100 %",statutDe(x.bruitForm,100,"min"))}
+    ${kpi("Peinture sous-traitée",pct(x.peintureST),"cible ≥ 60 %",statutDe(x.peintureST,60,"min"))}
+    ${kpi("NC cagoules ventilées",fmt(x.ncCagoule,0),"cible 0",statutDe(x.ncCagoule,0,"max"))}
+    ${kpi("NC tri des déchets",fmt(x.ncDechets,0),"cible 0",statutDe(x.ncDechets,0,"max"))}
+    ${kpi("NC stockage produits chimiques",fmt(x.ncStockage,0),"cible 0",statutDe(x.ncStockage,0,"max"))}
+    ${kpi("Événements environnementaux",fmt(x.pollutions,0),"cible 0",statutDe(x.pollutions,0,"max"))}
+  </div>`));
+  cSE.appendChild(fig("Couverture santé et compétences","Part de l'effectif couverte par chaque dispositif",
+    hBar({rows:[{k:"Formés SST",v:x.sst},{k:"Formés extincteurs",v:x.extincteurs},{k:"Protections auditives moulées",v:x.bruitEquip},{k:"Formés au risque bruit",v:x.bruitForm}],color:"#1baf7a",unit:" %",showPct:false})));
+  app.appendChild(cSE);
+
+  /* --- QHP & thèmes --- */
+  const c3=document.createElement("div"); c3.className="card c-b";
+  c3.innerHTML=`<h2><span class="bar"></span>Quart d'Heure Prévention & thèmes</h2>
+    <p class="sub">Une thématique par mois touchant 80 % du personnel hors administratif, en couvrant les trois domaines.</p>`;
+  c3.appendChild(el(`<div class="kpigrid" style="margin-bottom:14px">
+    ${kpi("QHP réalisés",fmt(ta.qhpN,0),aDate(12,STATE.year),statutDe(ta.qhpN,12,"cumul"))}
+    ${kpi("Participation",pct(ta.qhpTaux),"cible 80 %",statutDe(ta.qhpTaux,80,"min"))}
+    ${kpi("Thèmes traités",fmt(ta.themes,0),fmt(ta.thS,0)+" santé · "+fmt(ta.thSe,0)+" sécu. · "+fmt(ta.thE,0)+" env.")}
+    ${kpi("Diversité des domaines",fmt(ta.diversite,0)+" / 3","Santé · Sécurité · Environnement",statutDe(ta.diversite,3,"min"))}
+    ${kpi("Flashs SSE diffusés",fmt(ta.flash,0),aDate(10,STATE.year),statutDe(ta.flash,10,"cumul"))}
+  </div>`));
+  const g3=el(`<div class="grid g2"></div>`);
+  g3.appendChild(fig("Participation aux QHP","Objectif : 80 % du personnel hors administratif",
+    barChart({labels:MOIS_C,series:[{name:"Participation",color:"#eb6834",
+      values:y.months.map(m=>{const e=n(m.qhpE)||n(m.eff); return n(m.qhpN)>0&&e>0? n(m.qhpP)/(e*n(m.qhpN))*100:0;})}],
+      target:80,targetLabel:"Objectif 80 %",fmtV:v=>fmt(v,0),unit:" %",highlight:mi})));
+  g3.appendChild(fig("Thèmes traités par domaine","",
+    stackChart({labels:MOIS_C,series:[
+      {name:"Santé",color:"#1baf7a",values:y.months.map(m=>m.thS)},
+      {name:"Sécurité",color:"#2a78d6",values:y.months.map(m=>m.thSe)},
+      {name:"Environnement",color:"#eda100",values:y.months.map(m=>m.thE)}],highlight:mi}),
+    [{name:"Santé",color:"#1baf7a"},{name:"Sécurité",color:"#2a78d6"},{name:"Environnement",color:"#eda100"}]));
+  c3.appendChild(g3);
+  app.appendChild(c3);
+
+  /* --- Vigiminutes & remontées --- */
+  const c4=document.createElement("div"); c4.className="card c-g";
+  c4.innerHTML=`<h2><span class="bar"></span>Vigiminutes & remontées terrain</h2>
+    <p class="sub">La <b>Vigiminute</b> est l'analyse de risque réalisée avant une tâche. La <b>remontée terrain</b> signale une situation dangereuse, un presqu'accident ou une bonne pratique et alimente le plan d'actions.</p>`;
+  c4.appendChild(el(`<div class="kpigrid" style="margin-bottom:14px">
+    ${kpi("Vigiminutes réalisées",fmt(ta.vigR,0),"analyses de risque avant tâche")}
+    ${kpi("Remontées terrain suivies",fmt(ta.rem,0),aDate(ta.remCibleAn,STATE.year),statutDe(ta.rem,ta.remCibleAn,"cumul"))}
+    ${kpi("Collaborateurs concernés",fmt(ta.concernes,1),"effectif moyen − "+fmt(DB.settings.dirigeants,0)+" dirigeants")}
+    ${kpi("Objectif individuel",fmt(DB.settings.remParPers,0)+" / an","par collaborateur concerné")}
+  </div>`));
+  const g4=el(`<div class="grid g2"></div>`);
+  g4.appendChild(fig("Vigiminutes réalisées par mois","",
+    barChart({labels:MOIS_C,series:[{name:"Vigiminutes",color:"#1baf7a",values:y.months.map(m=>m.vigR)}],highlight:mi})));
+  g4.appendChild(fig("Remontées terrain suivies par mois","Rythme cible : "+fmt(ta.remCibleAn/12,1)+" par mois",
+    barChart({labels:MOIS_C,series:[{name:"Remontées",color:"#2a78d6",values:y.months.map(m=>m.rem)}],
+      target:ta.remCibleAn/12,targetLabel:"Rythme cible",fmtV:v=>fmt(v,0),highlight:mi})));
+  c4.appendChild(g4);
+  app.appendChild(c4);
+
+  /* --- Volet 1 (vert) : terrain et vigilance --- */
+  const v1=document.createElement("div"); v1.className="card c-g";
+  v1.innerHTML=`<h2><span class="bar"></span>Terrain et vigilance — ${STATE.year}</h2>
+    <p class="sub">Présence managériale sur le terrain et observations formalisées.</p>`;
+  v1.appendChild(el(`<div class="kpigrid">
+    ${kpi("Visites terrain / VMS",fmt(ta.vms,0),aDate(12,STATE.year),statutDe(ta.vms,12,"cumul"))}
+    ${kpi("Remontées issues des VMS",fmt(ta.vmsR,0),"observations formalisées")}
+  </div>`));
+  v1.appendChild(el(`<div style="margin-top:14px"></div>`));
+  v1.appendChild(fig("Visites terrain par mois","Objectif : une visite managériale par mois",
+    barChart({labels:MOIS_C,series:[{name:"VMS",color:"#1baf7a",values:y.months.map(m=>m.vms)}],target:1,targetLabel:"1 / mois",highlight:mi,height:180})));
+  app.appendChild(v1);
+
+  /* --- Volet 2 (orange) : accueil et formation --- */
+  const v2=document.createElement("div"); v2.className="card c-o";
+  v2.innerHTML=`<h2><span class="bar"></span>Accueil et formation — ${STATE.year}</h2>
+    <p class="sub">Accueil des nouveaux arrivants, plan de formation et vérifications générales périodiques.</p>`;
+  v2.appendChild(el(`<div class="kpigrid">
+    ${kpi("Nouveaux arrivants",fmt(ta.na,0),"intérimaires compris")}
+    ${kpi("Accueils sécurité",fmt(ta.acc,0)+" / "+fmt(ta.na,0),"cible 100 %",statutDe(ta.accTaux,100,"min"))}
+    ${kpi("Formations réalisées",fmt(ta.formNb,0),"sur l'exercice")}
+    ${kpi("Réalisation des VGP",pct(ta.vgpTaux),n(x.vgpNb)? fmt(x.vgpNb,0)+" équipements suivis":"cible 100 %",statutDe(ta.vgpTaux,100,"min"))}
+    ${kpi("Personnel formé SST",pct(x.sst),"cible 50 %",statutDe(x.sst,50,"min"))}
+  </div>`));
+  v2.appendChild(el(`<div style="margin-top:14px"></div>`));
+  const gF=el(`<div class="grid g2"></div>`);
+  gF.appendChild(fig("Taux de couverture annuels","Vérifications périodiques, compétences et accueils",
+    hBar({rows:[{k:"Vérifications générales périodiques",v:Math.round(ta.vgpTaux)},{k:"Formés SST",v:Math.round(x.sst)},
+      {k:"Formés extincteurs",v:Math.round(x.extincteurs)},{k:"Formés au risque bruit",v:Math.round(x.bruitForm)},
+      {k:"Accueils sécurité",v:Math.round(ta.accTaux)}],color:"#eb6834",unit:" %",showPct:false})));
+  const det=y.months.map((m,i)=>({i:i,txt:(m.formTxt||"").trim(),nb:n(m.form)})).filter(o=>o.txt);
+  gF.appendChild(el(`<div><figcaption>Détail des formations</figcaption>
+    <div class="figsub">Sessions réalisées dans l'année, telles que saisies.</div>
+    ${det.length? `<div class="tw"><table><thead><tr><th style="width:90px">Mois</th><th>Formation</th><th class="n" style="width:60px">Nb</th></tr></thead><tbody>`+
+      det.map(o=>`<tr><td>${MOIS[o.i]}</td><td style="white-space:normal">${esc(o.txt).replace(/\n/g,"<br>")}</td><td class="n">${fmt(o.nb,0)}</td></tr>`).join("")+
+      `</tbody></table></div>` : `<div class="empty">Aucune formation saisie.</div>`}</div>`));
+  v2.appendChild(gF);
+  app.appendChild(v2);
+
+  /* --- Volet 3 (bleu) : audits internes --- */
+  const v3=document.createElement("div"); v3.className="card c-b";
+  v3.innerHTML=`<h2><span class="bar"></span>Audits internes — ${STATE.year}</h2>
+    <p class="sub">Contrôle interne du système MASE.</p>`;
+  v3.appendChild(el(`<div class="kpigrid">
+    ${kpi("Audits internes réalisés",fmt(ta.aud,0),aDate(1,STATE.year),statutDe(ta.aud,1,"cumul"))}
+    ${kpi("Non-conformités",fmt(x.ncAudit,0),"cible 0",statutDe(x.ncAudit,0,"max"))}
+    ${kpi("Points d'amélioration et points sensibles",fmt(x.auditPA,0),"à traiter au plan d'actions")}
+    ${kpi("Points forts",fmt(x.auditPF,0),"relevés par l'auditeur")}
+  </div>`));
+  if(n(x.ncAudit)+n(x.auditPA)+n(x.auditPF)>0)
+    v3.appendChild(fig("Résultats de l'audit interne","",hBar({rows:[
+      {k:"Points forts",v:x.auditPF,color:"#1baf7a"},
+      {k:"Points d'amélioration / sensibles",v:x.auditPA,color:"#eda100"},
+      {k:"Non-conformités",v:x.ncAudit,color:"#d03b3b"}],showPct:false})));
+  app.appendChild(v3);
+
+  /* --- Volet 4 (rose) : plan d'actions et avancement annuel --- */
+  const v4=document.createElement("div"); v4.className="card c-rose";
+  v4.innerHTML=`<h2><span class="bar"></span>Plan d'actions et avancement annuel — ${STATE.year}</h2>
+    <p class="sub">Avancement global du programme SSE de l'exercice, calculé sur ${fmt(ta.avancementNb,0)} composantes renseignées (plan d'actions, formations, VGP, QHP, remontées, visites terrain, audits, flashs), chacune rapportée à sa cible ${P<1?"proratisée à date":"annuelle"}.</p>`;
+  const gv=el(`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;align-items:center"></div>`);
+  const gb=el(`<div class="kpi" style="display:grid;place-items:center;padding:16px"></div>`);
+  gb.appendChild(gauge(ta.avancement,"Avancement du programme SSE",P<1?"à date":"sur l'exercice",gaugeCls(ta.avancement,100)));
+  gv.appendChild(gb);
+  gv.appendChild(el(`<div class="kpigrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+    ${kpi("Avancement du plan d'actions",pct(ta.pa),"cible 100 %",statutDe(ta.pa,100,"min"))}
+    ${kpi("Réalisation du système MASE",pct(x.masePct),"auto-évaluation",statutDe(x.masePct,100,"min"))}
+    ${kpi("Vigiminutes réalisées",fmt(ta.vigR,0),"analyses de risque avant tâche")}
+  </div>`));
+  v4.appendChild(gv);
+  app.appendChild(v4);
+
+  /* --- Volet 5 (jaune) : entreprises extérieures et culture juste --- */
+  const v5=document.createElement("div"); v5.className="card c-jaune";
+  v5.innerHTML=`<h2><span class="bar"></span>Entreprises extérieures et culture juste — ${STATE.year}</h2>
+    <p class="sub">Maîtrise de la coactivité, retour d'expérience de fin de chantier et suites données aux écarts de comportement.</p>`;
+  v5.appendChild(el(`<div class="kpigrid">
+    ${kpi("Plans de prévention",fmt(ta.pdp,0),"établis dans l'année")}
+    ${kpi("Protocoles sécurité mis à jour",fmt(ta.proto,0),"chargement / déchargement")}
+    ${kpi("Évaluations de prestataires",fmt(ta.evalP,0),"grille d'évaluation")}
+    ${kpi("Bilans de fin de chantier",fmt(ta.bfc,0),"RETEX")}
+    ${kpi("Rappels à l'ordre HSE",fmt(ta.sanc,0),"culture juste")}
+  </div>`));
+  app.appendChild(v5);
+
+  setTimeout(()=>{
+    const th=document.getElementById("certTh"); if(th) th.onclick=()=>openViewer(DB.settings.certif,"Certificat MASE — "+DB.entreprise.certif);
+    const ca=document.getElementById("certAdd"); if(ca) ca.onclick=()=>{ STATE.tab="set"; render(); toast("Ajoutez le certificat dans la carte « Certification MASE »"); };
+    document.querySelectorAll(".bz").forEach(z=> z.onclick=()=>{ STATE.zone = STATE.zone===z.dataset.z? null : z.dataset.z; render(); });
+    const cl=document.getElementById("zclr"); if(cl) cl.onclick=()=>{ STATE.zone=null; render(); };
+  },0);
+  return app;
+}
+
+/* ============================== COMPARAISON ============================= */
+function viewComp(){
+  const app=document.createElement("div");
+  const tt=YEARS.map(v=>yearTotals(v));
+  const c=document.createElement("div"); c.className="card";
+  c.innerHTML=`<h2><span class="bar"></span>Comparaison des exercices 2024 · 2025 · 2026</h2>
+    <p class="sub">Évolution des indicateurs sur les trois exercices. ${prorata(2026)<1?"L'exercice 2026 est en cours ("+Math.round(prorata(2026)*12)+" mois révolus) : les cumuls ne sont pas comparables en l'état aux années closes.":""}</p>`;
+  const g=el(`<div class="grid g2"></div>`);
+  g.appendChild(fig("Événements accidentels","",
+    barChart({labels:YEARS.map(String),series:[
+      {name:"AT avec arrêt",color:"#d03b3b",values:tt.map(v=>v.ataa)},
+      {name:"AT sans arrêt",color:"#eb6834",values:tt.map(v=>v.atsa)},
+      {name:"AT bénins",color:"#eda100",values:tt.map(v=>v.ben)}],directLabels:false,height:200}),
+    [{name:"AT avec arrêt",color:"#d03b3b"},{name:"AT sans arrêt",color:"#eb6834"},{name:"AT bénins",color:"#eda100"}]));
+  g.appendChild(fig("Taux de gravité par exercice","Jours d'arrêt pour 1 000 heures travaillées",
+    barChart({labels:YEARS.map(String),series:[{name:"TG",color:"#eb6834",values:tt.map(v=>v.tg)}],fmtV:v=>fmt(v,2),height:200})));
+  g.appendChild(fig("Vigiminutes et remontées terrain","",
+    barChart({labels:YEARS.map(String),series:[
+      {name:"Vigiminutes",color:"#1baf7a",values:tt.map(v=>v.vigR)},
+      {name:"Remontées suivies",color:"#2a78d6",values:tt.map(v=>v.rem)}],height:200}),
+    [{name:"Vigiminutes",color:"#1baf7a"},{name:"Remontées suivies",color:"#2a78d6"}]));
+  g.appendChild(fig("Quart d'Heure Prévention","",
+    barChart({labels:YEARS.map(String),series:[{name:"QHP réalisés",color:"#4a3aa7",values:tt.map(v=>v.qhpN)}],target:12,targetLabel:"Objectif 12 / an",height:200})));
+  c.appendChild(g);
+  app.appendChild(c);
+
+  const c2=document.createElement("div"); c2.className="card";
+  c2.innerHTML=`<h2><span class="bar"></span>Tableau comparatif</h2>`;
+  const L=[["Effectif moyen",v=>fmt(v.eff,1)],["Heures travaillées",v=>fmt(v.h,0)],["Heures intérimaires",v=>fmt(v.hI,0)],
+    ["AT avec arrêt",v=>fmt(v.ataa,0)],["AT sans arrêt",v=>fmt(v.atsa,0)],["AT bénins",v=>fmt(v.ben,0)],
+    ["Jours d'arrêt",v=>fmt(v.jours,0)],["Maladies professionnelles",v=>fmt(v.mp,0)],
+    ["TF1",v=>fmt(v.tf1,2)],["TF2",v=>fmt(v.tf2,2)],["Taux de gravité",v=>fmt(v.tg,2)],
+    ["Vigiminutes réalisées",v=>fmt(v.vigR,0)],["Remontées terrain suivies",v=>fmt(v.rem,0)],
+    ["QHP réalisés",v=>fmt(v.qhpN,0)],["Participation QHP",v=>pct(v.qhpTaux)],["Diversité des thèmes",v=>fmt(v.diversite,0)+" / 3"],
+    ["Visites terrain / VMS",v=>fmt(v.vms,0)],["Flashs SSE diffusés",v=>fmt(v.flash,0)],
+    ["Accueils sécurité",v=>fmt(v.acc,0)+" / "+fmt(v.na,0)],["Formations réalisées",v=>fmt(v.form,0)],
+    ["Audits internes",v=>fmt(v.aud,0)],["Avancement du plan d'actions",v=>pct(v.pa)]];
+  c2.appendChild(el(`<div class="tw"><table><thead><tr><th>Indicateur</th>${YEARS.map(v=>`<th class="n">${v}${v===new Date().getFullYear()?" *":""}</th>`).join("")}</tr></thead>
+    <tbody>${L.map(([lab,f])=>`<tr><td>${lab}</td>${tt.map(v=>`<td class="n">${f(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <div class="figsub" style="margin-top:8px">* exercice en cours, cumul partiel.</div>`));
+  app.appendChild(c2);
+
+  const c3=document.createElement("div"); c3.className="card";
+  c3.innerHTML=`<h2><span class="bar"></span>Objectifs de la politique par exercice</h2>
+    <p class="sub">Bilan de fin d'exercice (appréciation T4, ou T3 pour l'exercice en cours).</p>`;
+  let h=`<div class="tw"><table><thead><tr><th>Exercice</th><th>Slogan</th><th class="n">Objectifs</th><th class="c">😀</th><th class="c">🙂</th><th class="c">😐</th><th class="c">😟</th><th class="c">—</th></tr></thead><tbody>`;
+  YEARS.forEach(v=>{
+    const yy=DB.years[v]; if(!yy) return;
+    const ref = v===new Date().getFullYear()? (trimestreCourant()||"T4") : "T4";
+    const cnt=k=>yy.objectifs.filter(o=>o[ref].s===k).length;
+    h+=`<tr><td><b>${v}</b> <span style="color:var(--faint)">(${ref})</span></td><td style="white-space:normal;max-width:320px">${esc(yy.politique.slogan)}</td>
+      <td class="n">${yy.objectifs.length}</td><td class="c">${cnt("😀")}</td><td class="c">${cnt("🙂")}</td><td class="c">${cnt("😐")}</td><td class="c">${cnt("😟")}</td><td class="c">${cnt("")}</td></tr>`;
+  });
+  c3.appendChild(el(h+`</tbody></table></div>`));
+  app.appendChild(c3);
+  return app;
+}
+
+/* ============================== SAISIE ================================== */
+const GROUPES=[
+  {t:"Effectif & temps de travail",cls:"b",cols:[["eff","Effectif moyen",1],["h","Heures travaillées",0],["etpI","ETP intérim",2],["hI","Heures intérim",0]]},
+  {t:"Accidentologie & santé",cls:"r",cols:[["mort","Décès",0],["ataa","AT avec arrêt",0],["atsa","AT sans arrêt",0],["ben","AT bénins",0],["traj","AT trajet",0],["jours","Jours d'arrêt",0],["mp","Maladies pro.",0],["atI","AT intérim",0],["atST","AT sous-traitants",0]]},
+  {t:"Quart d'Heure Prévention",cls:"o",cols:[["qhpN","QHP réalisés",0],["qhpE","Effectif concerné",0],["qhpP","Participants",0],["thS","Thèmes santé",0],["thSe","Thèmes sécurité",0],["thE","Thèmes environnement",0]]},
+  {t:"Vigiminutes & remontées",cls:"g",cols:[["vigR","Vigiminutes réalisées",0],["rem","Remontées terrain suivies",0]]},
+  {t:"Terrain & audits",cls:"b",cols:[["vms","Visites terrain / VMS",0],["vmsR","Remontées issues des VMS",0],["aud","Audits internes",0],["sanc","Rappels à l'ordre",0]]},
+  {t:"Accueil & formation",cls:"v",cols:[["na","Nouveaux arrivants",0],["acc","Accueils sécurité",0],["form","Formations réalisées",0],["flash","Flashs SSE diffusés",0]]},
+  {t:"Entreprises extérieures & plan d'actions",cls:"m",cols:[["pdp","Plans de prévention",0],["proto","Protocoles sécurité (maj)",0],["evalP","Évaluations prestataires",0],["bfc","Bilans fin de chantier",0],["pa","Avancement PA (%)",0]]}
+];
+/* Recalcule le pied de tableau sans reconstruire la page (le focus est conservé) */
+function refreshFoot(card,cols){
+  const t=yearTotals(STATE.year), y=Y();
+  const tds=card.querySelectorAll("tfoot td");
+  cols.forEach((cc,k)=>{
+    let v; if(cc[0]==="eff") v=fmt(t.eff,1); else if(cc[0]==="etpI") v=fmt(t.etpI,2); else if(cc[0]==="pa") v=fmt(t.pa,0);
+    else v=fmt(sum(y.months,m=>m[cc[0]]),cc[2]);
+    if(tds[k+1]) tds[k+1].textContent=v;
+  });
+}
+function viewSaisie(){
+  const y=Y(), app=document.createElement("div"), t=yearTotals(STATE.year);
+  if(!STATE.edit){
+    const nb=el(`<div class="note"><b>Mode consultation — la saisie est verrouillée</b>
+      <div class="row" style="margin-top:8px"><span>Activez l'édition pour renseigner les valeurs et faire apparaître les corbeilles.</span>
+      <button class="btn btn-primary" id="goEdit">✏️ Activer l'édition</button></div></div>`);
+    nb.querySelector("#goEdit").onclick=()=>{ STATE.edit=true; render(); toast("Mode édition activé"); };
+    app.appendChild(nb);
+  }
+
+  /* ---- Tableau mensuel ---- */
+  const c=document.createElement("div"); c.className="card c-b";
+  c.innerHTML=`<h2><span class="bar"></span>Saisie mensuelle — ${STATE.year}</h2>
+    <p class="sub">Toutes les données mensuelles au même endroit. Les taux et les avancements en découlent automatiquement. La corbeille vide la ligne du mois.</p>`;
+  const cols=[]; GROUPES.forEach(g=>g.cols.forEach(cc=>cols.push(cc)));
+  let h=`<div class="tw"><table><thead>
+    <tr><th rowspan="2" style="vertical-align:bottom">Mois</th>${GROUPES.map(g=>`<th class="grp ${g.cls}" colspan="${g.cols.length}">${esc(g.t)}</th>`).join("")}<th rowspan="2" class="c editonly"></th></tr>
+    <tr>${cols.map(cc=>`<th class="n">${esc(cc[1])}</th>`).join("")}</tr></thead><tbody>`;
+  const cm=(new Date().getFullYear()===STATE.year)? new Date().getMonth():-1;
+  y.months.forEach((m,i)=>{
+    h+=`<tr class="${i===cm?"cur":""}"><td>${MOIS[i]}</td>`+cols.map(cc=>
+      `<td class="n"><input type="number" step="${cc[2]?"0."+"0".repeat(cc[2]-1)+"1":"1"}" data-m="${i}" data-f="${cc[0]}" value="${n(m[cc[0]])||""}" placeholder="0"></td>`).join("")+
+      `<td class="c editonly"><button class="icobtn rowDel" data-i="${i}" title="Vider ${MOIS[i]}">🗑</button></td></tr>`;
+  });
+  h+=`</tbody><tfoot><tr><td>TOTAL / MOY.</td>`+cols.map(cc=>{
+    let v; if(cc[0]==="eff") v=fmt(t.eff,1); else if(cc[0]==="etpI") v=fmt(t.etpI,2); else if(cc[0]==="pa") v=fmt(t.pa,0);
+    else v=fmt(sum(y.months,m=>m[cc[0]]),cc[2]);
+    return `<td class="n">${v}</td>`; }).join("")+`<td class="editonly"></td></tr></tfoot></table></div>`;
+  c.appendChild(el(h));
+  c.querySelectorAll("input").forEach(inp=>{ inp.disabled=!STATE.edit;
+    inp.addEventListener("input",e=>{ const i=+e.target.dataset.m,f=e.target.dataset.f;
+      Y().months[i][f]= e.target.value===""?0:parseFloat(e.target.value)||0;
+      clearTimeout(inp._t); inp._t=setTimeout(()=>{ saveDB(); refreshFoot(c,cols); },350); }); });
+  c.querySelectorAll(".rowDel").forEach(b=> b.onclick=()=>{
+    const i=+b.dataset.i;
+    if(confirm("Vider toutes les valeurs du mois de "+MOIS[i]+" "+STATE.year+" ?")){
+      const keep=Y().months[i].m; Y().months[i]=emptyMonth(keep); saveDB(); render(); toast(MOIS[i]+" vidé"); } });
+  app.appendChild(c);
+
+  /* ---- Registre d'accidentologie ---- */
+  const A=y.accidents||[];
+  const cA=document.createElement("div"); cA.className="card c-r";
+  cA.innerHTML=`<h2><span class="bar"></span>Registre d'accidentologie — ${STATE.year}</h2>
+    <p class="sub">Accidents, presqu'accidents et situations dangereuses. Chaque événement analysé alimente le plan d'actions. La synthèse et la pyramide de Bird sont sur le tableau de bord.</p>`;
+  cA.appendChild(el(`<div class="row editonly" style="margin-bottom:12px"><button class="btn btn-primary" id="accAdd">＋ Ajouter un événement</button>
+    ${A.length?'<span class="spacer"></span><button class="btn btn-warn" id="accPurge">🗑 Vider le registre '+STATE.year+'</button>':''}</div>`));
+  if(!A.length) cA.appendChild(el(`<div class="empty">Aucun événement enregistré pour ${STATE.year}.</div>`));
+  else{
+    let ha=`<div class="tw"><table><thead><tr><th>Date</th><th>Type</th><th>Collaborateur</th><th>Lieu</th><th>Blessure</th><th>Partie du corps</th><th class="n">Jours</th><th>Analyse</th><th class="c"></th></tr></thead><tbody>`;
+    A.forEach((a,i)=>{ ha+=`<tr><td>${esc(a.date)}</td><td>${esc(a.type)}</td><td>${esc(a.nom)}</td><td>${esc(a.lieu)}</td><td>${esc((a.bless||"").slice(0,28))}</td><td>${esc(a.corps)}</td><td class="n">${fmt(a.jours,0)}</td><td>${esc(a.analyse)}</td>
+      <td class="c"><button class="btn btn-ghost accEdit" data-i="${i}" style="padding:4px 10px;font-size:12px">Ouvrir</button>
+      <button class="icobtn accDel editonly" data-i="${i}" title="Supprimer">🗑</button></td></tr>`; });
+    cA.appendChild(el(ha+`</tbody></table></div>`));
+  }
+  app.appendChild(cA);
+
+  /* ---- Détail des formations ---- */
+  const cF=document.createElement("div"); cF.className="card c-v";
+  cF.innerHTML=`<h2><span class="bar"></span>Détail des formations — ${STATE.year}</h2>
+    <p class="sub">Une ligne par mois : intitulé et nombre de sessions, comme dans le classeur. Le total annuel affiché sur le tableau de bord se saisit juste en dessous.</p>`;
+  let hF=`<div class="tw"><table><thead><tr><th style="width:110px">Mois</th><th>Formations réalisées</th><th class="n" style="width:90px">Nb</th><th class="c editonly" style="width:44px"></th></tr></thead><tbody>`;
+  y.months.forEach((m,i)=>{
+    hF+=`<tr><td>${MOIS[i]}</td><td style="white-space:normal;padding:3px 6px">
+      <textarea data-ft="${i}" rows="${Math.max(1,(m.formTxt||"").split("\n").length)}" placeholder="ex. 2 Formations Chariot Élévateur"
+        style="width:100%;border:1px solid transparent;border-radius:7px;padding:4px 6px;background:transparent;resize:vertical;font-size:13px">${esc(m.formTxt||"")}</textarea></td>
+      <td class="n">${fmt(m.form,0)}</td>
+      <td class="c editonly"><button class="icobtn ftDel" data-i="${i}" title="Effacer">🗑</button></td></tr>`;
+  });
+  hF+=`</tbody><tfoot><tr><td>TOTAL</td><td style="color:var(--ink2);font-weight:400">Total annuel retenu (saisi à la main)</td>
+    <td class="n">${fmt(sum(y.months,m=>m.form),0)}</td><td class="editonly"></td></tr></tfoot></table></div>`;
+  cF.appendChild(el(hF));
+  cF.appendChild(el(`<div class="grid g3" style="margin-top:12px">
+    <div class="field"><label>Total annuel des formations réalisées</label>
+      <input type="number" id="fTot" value="${n(y.extras.formTotal)||""}" placeholder="0">
+      <div class="hint">Laisser vide pour utiliser la somme calculée ci-dessus (${fmt(sum(y.months,m=>m.form),0)}).</div></div>
+  </div>`));
+  cF.querySelectorAll("textarea[data-ft]").forEach(ta=>{
+    ta.disabled=!STATE.edit;
+    ta.addEventListener("input",e=>{ const i=+e.target.dataset.ft, v=e.target.value;
+      const yy=Y(); yy.months[i].formTxt=v;
+      const mm=v.match(/(\d+)\s*(?:Formation|Recyclage)/gi)||[];
+      yy.months[i].form = mm.reduce((a,x)=>a+parseInt(x,10),0);
+      clearTimeout(ta._t); ta._t=setTimeout(()=>saveDB(),400); });
+  });
+  cF.querySelectorAll(".ftDel").forEach(b=> b.onclick=()=>{ const i=+b.dataset.i;
+    Y().months[i].formTxt=""; Y().months[i].form=0; saveDB(); render(); });
+  const fT=cF.querySelector("#fTot"); fT.disabled=!STATE.edit;
+  fT.addEventListener("input",e=>{ Y().extras.formTotal= e.target.value===""?0:parseFloat(e.target.value)||0;
+    clearTimeout(fT._t); fT._t=setTimeout(()=>saveDB(),350); });
+  app.appendChild(cF);
+
+  /* ---- Bilans annuels ---- */
+  const BL=[
+    {t:"Formations et vérifications périodiques",cls:"c-v",
+      f:[["formPrev","Formations prévues au plan (nb)"],["formPct","% de réalisation du plan de formation"],
+         ["vgpPct","% de réalisation des VGP"],["vgpNb","Équipements soumis à VGP (nb)"],
+         ["sst","% du personnel formé SST"],["extincteurs","% formé manipulation extincteurs"],["bruitForm","% formé au risque bruit"]],
+      calc:()=>`Formations réalisées (saisie mensuelle) : <b>${fmt(t.form,0)}</b> · Taux retenu : <b>${t.formTaux? pct(t.formTaux):"—"}</b>. Laissez « % de réalisation » vide pour que le taux soit calculé automatiquement à partir des formations prévues et réalisées.`},
+    {t:"Santé au travail",cls:"c-g",f:[["bruitEquip","% équipé de protections auditives moulées"],["ncCagoule","NC port des cagoules ventilées"],["peintureST","% des mises en peinture sous-traitées"],["campagnes","Campagnes de mesures d'exposition (nb)"]],
+      calc:()=>`Maladies professionnelles reconnues : <b>${fmt(t.mp,0)}</b>`},
+    {t:"Environnement",cls:"c-g",f:[["pollutions","Événements environnementaux significatifs"],["ncDechets","NC tri des déchets"],["ncStockage","NC stockage produits chimiques"],["sensibEnv","Actions de sensibilisation environnement (nb)"]],calc:null},
+    {t:"Système & certification MASE",cls:"c-v",f:[["ncAudit","NC relevées en audit interne"],["masePct","% de réalisation du système MASE"],["budget","Budget SSE engagé (€)"]],calc:null}
+  ];
+  BL.forEach(b=>{
+    const cc=document.createElement("div"); cc.className="card "+b.cls;
+    cc.innerHTML=`<h2><span class="bar"></span>${esc(b.t)} — ${STATE.year}</h2>`+(b.calc?`<p class="sub">${b.calc()}</p>`:"");
+    const gg=el(`<div class="grid g3"></div>`);
+    b.f.forEach(([k,lab])=>{
+      const HINT={formPct:"Renseigné à la main tant que le registre n'est pas branché.",
+        vgpPct:"Part des vérifications générales périodiques réalisées à l'échéance.",
+        vgpNb:"Engins, appareils de levage, EPI antichute, extincteurs…",
+        masePct:"Auto-évaluation MASE de l'exercice."};
+      const fl=el(`<div class="field"><label>${esc(lab)}</label><div class="row" style="gap:6px;flex-wrap:nowrap">
+        <input type="number" step="1" value="${n(y.extras[k])||""}" placeholder="0">
+        <button class="icobtn editonly" data-clr="${k}" title="Effacer">🗑</button></div>
+        ${HINT[k]?`<div class="hint">${esc(HINT[k])}</div>`:""}</div>`);
+      const i=fl.querySelector("input"); i.disabled=!STATE.edit;
+      i.addEventListener("input",e=>{ const v=e.target.value===""?0:parseFloat(e.target.value)||0;
+        Y().extras[k]=v; clearTimeout(i._t); i._t=setTimeout(()=>saveDB(),350); });
+      fl.querySelector("[data-clr]").onclick=()=>{ Y().extras[k]=0; i.value=""; saveDB(); };
+      gg.appendChild(fl);
+    });
+    cc.appendChild(gg); app.appendChild(cc);
+  });
+
+  const cj=document.createElement("div"); cj.className="card";
+  cj.innerHTML=`<h2><span class="bar"></span>Compteur & période</h2>`;
+  const gj=el(`<div class="grid g3">
+    <div class="field"><label>Jours sans accident avec arrêt</label><input type="number" id="jsaV" value="${n(y.jourssansAT.valeur)}"></div>
+    <div class="field"><label>Date de référence (dernier AT)</label><input type="text" id="jsaR" value="${esc(y.jourssansAT.ref)}"></div>
+    <div class="field"><label>Période affichée sur le bulletin</label><input type="text" id="perV" value="${esc(y.periode)}"></div>
+  </div>`);
+  gj.querySelectorAll("input").forEach(i=>{ i.disabled=!STATE.edit;
+    i.addEventListener("input",e=>{ clearTimeout(i._t); i._t=setTimeout(()=>{
+      const yy=Y();
+      if(i.id==="jsaV") yy.jourssansAT.valeur=parseFloat(i.value)||0;
+      else if(i.id==="jsaR") yy.jourssansAT.ref=i.value;
+      else yy.periode=i.value;
+      saveDB(); },350); }); });
+  cj.appendChild(gj); app.appendChild(cj);
+
+  setTimeout(()=>{
+    const add=document.getElementById("accAdd"); if(add) add.onclick=()=>accForm(null);
+    const pg=document.getElementById("accPurge"); if(pg) pg.onclick=()=>{
+      if(confirm("Supprimer TOUS les événements de "+STATE.year+" ? Cette action est irréversible.")){ Y().accidents=[]; saveDB(); render(); toast("Registre "+STATE.year+" vidé"); } };
+    document.querySelectorAll(".accEdit").forEach(b=> b.onclick=()=>accForm(+b.dataset.i));
+    document.querySelectorAll(".accDel").forEach(b=> b.onclick=()=>{ const i=+b.dataset.i, a=Y().accidents[i];
+      if(confirm("Supprimer définitivement l'événement du "+(a.date||"?")+" ("+a.type+") ?")){ Y().accidents.splice(i,1); saveDB(); render(); toast("Événement supprimé"); } });
+  },0);
+  return app;
+}
+/* ============================= ACCIDENTOLOGIE ============================ */
+const TYPES_EVT=["Accident avec Arrêt de Travail","Accident sans Arrêt de Travail","Accident Bénin","Accident Mortel","Accident de Trajet","Presqu'Accident de Travail","Situation Dangereuse","Maladie Professionnelle","Dommages causés à l'environnement","Dommages causés aux équipements"];
+const CATS_PRO=["Employés CDI","Employés CDD","Cadres CDI","Cadres CDD","Intérimaires","Apprenti(e)s / Stagiaires"];
+const BLESS=["Lésions traumatiques (Entorse / Foulure / Luxation…)","Liaisons musculaires (lombalgie…)","Écrasement / Pincement","Plaies / Coupures / Amputation","Heurt / Choc","Douleurs","Atteinte respiratoire","Brûlure thermique","Brûlure chimique","Électrisation / Électrocution","Infection","Atteinte oculaire (irritation)","Atteinte auditive","Blessures multiples","Pas de blessure"];
+const RISQUES=["Chute de plain-pied","Chute de hauteur","Manutention manuelle / TMS","Blessure par un outil à main","Blessure par une machine en mouvement","Contact avec un objet tranchant","Contact avec une substance chimique","Contact avec l'électricité","Projection d'un corps étranger","Chute d'objet / effondrement","Choc / Heurt avec un objet fixe","Accident de la route en mission","Exposition à la chaleur ou au froid","Autre"];
+const CAUSES=["Cause Technique : défaillance d'un équipement","Cause Technique : manque d'entretien d'un équipement","Cause Technique : moyen de protection inadapté (lunettes insuffisantes)","Cause Humaine : erreur humaine / manque de vigilance","Cause Humaine : non-respect des consignes HSE","Cause Humaine : autres facteurs (stress, fatigue, médicaments)","Cause Organisationnelle : procédure inexistante, inadaptée ou non appliquée","Cause Organisationnelle : moyens de protection non en place","Cause Organisationnelle : formation inadéquate","Cause liée à l'environnement de travail : risques non pris en compte","Cause liée à l'environnement de travail : coactivité mal gérée","Autre"];
+const ZONES=[
+ {k:"Tête / Arcade",        s:'<ellipse cx="120" cy="34" rx="25" ry="29"/>'},
+ {k:"Yeux",                 s:'<rect x="103" y="26" width="34" height="12" rx="6"/>'},
+ {k:"Cou",                  s:'<rect x="111" y="60" width="18" height="14" rx="5"/>'},
+ {k:"Épaules",              s:'<path d="M74 92 q46 -19 92 0 v13 q-46 -17 -92 0 z"/>'},
+ {k:"Système respiratoire", s:'<rect x="101" y="110" width="38" height="34" rx="9"/>'},
+ {k:"Tronc",                s:'<path d="M86 106 h13 v72 h42 v-72 h13 v76 q-34 11 -68 0 z"/>'},
+ {k:"Coude / Avant-bras",   s:'<rect x="62" y="122" width="21" height="60" rx="10"/><rect x="157" y="122" width="21" height="60" rx="10"/>'},
+ {k:"Main / Doigts",        s:'<ellipse cx="72.5" cy="196" rx="12" ry="15"/><ellipse cx="167.5" cy="196" rx="12" ry="15"/>'},
+ {k:"Cuisse",               s:'<rect x="92" y="190" width="24" height="56" rx="11"/><rect x="124" y="190" width="24" height="56" rx="11"/>'},
+ {k:"Genou",                s:'<rect x="92" y="248" width="24" height="22" rx="10"/><rect x="124" y="248" width="24" height="22" rx="10"/>'},
+ {k:"Jambe",                s:'<rect x="94" y="272" width="20" height="56" rx="9"/><rect x="126" y="272" width="20" height="56" rx="9"/>'},
+ {k:"Cheville",             s:'<rect x="94" y="330" width="20" height="16" rx="6"/><rect x="126" y="330" width="20" height="16" rx="6"/>'},
+ {k:"Pied / Orteil",        s:'<path d="M94 348 h20 v13 h-29 q-4 -8 9 -13 z"/><path d="M126 348 h20 q13 5 9 13 h-29 z"/>'},
+ {k:"Dos",                  s:'<rect x="192" y="112" width="34" height="40" rx="9"/>', lab:"Dos", lx:209, ly:136},
+ {k:"Ensemble du corps",    s:'<rect x="192" y="162" width="34" height="40" rx="9"/>', lab:"Corps", lx:209, ly:186}
+];
+function bodyMap(counts){
+  let max=0; Object.values(counts).forEach(v=>{ if(v>max)max=v; }); max=max||1;
+  const SIL='<path d="M120 5 c15 0 25 12 25 29 c0 11 -5 21 -12 26 l0 6 c20 3 34 11 39 22 l0 85 c0 8 -12 8 -12 0 l0 -60 l-5 0 l0 76 c0 6 -3 9 -3 16 l0 88 c0 9 -13 9 -13 0 l0 -82 l-8 0 l0 82 c0 9 -13 9 -13 0 l0 -88 c0 -7 -3 -10 -3 -16 l0 -76 l-5 0 l0 60 c0 8 -12 8 -12 0 l0 -85 c5 -11 19 -19 39 -22 z" fill="#f4f7fb" stroke="#cfdae7" stroke-width="1.2"/>';
+  let sh=SIL;
+  ZONES.forEach(z=>{
+    const c=counts[z.k]||0, op=c? (.3+.6*c/max):0;
+    const fill=c? `fill:rgba(208,59,59,${op.toFixed(2)});stroke:#b02c2c;` : "";
+    const sel=STATE.zone===z.k? " hit":"";
+    sh+=`<g class="bz${sel}" style="${fill}" data-z="${esc(z.k)}"><title>${esc(z.k)}${c?" — "+c+" lésion(s)":""}</title>${z.s}</g>`;
+    if(z.lab) sh+=`<text x="${z.lx}" y="${z.ly}" text-anchor="middle" font-size="10" style="fill:#1b4f8f" font-weight="700" pointer-events="none">${z.lab}</text>`;
+  });
+  return `<svg viewBox="0 0 240 372" width="100%" style="max-width:250px;height:auto" role="img" aria-label="Localisation des lésions">${sh}</svg>`;
+}
+function countBy(list,key){
+  const m={}; list.forEach(a=>{ const k=a[key]||"— non renseigné"; m[k]=(m[k]||0)+1; });
+  return Object.keys(m).sort((a,b)=>m[b]-m[a]).map(k=>({k:k,v:m[k]}));
+}
+function accForm(idx){
+  const y=Y(), isNew=idx==null;
+  const a=isNew? {type:"Situation Dangereuse",date:"",nom:"",cat:"Employés CDI",metier:"",lieu:"",temoin:"",desc:"",bless:"",corps:"",risque:"",cause:"",jours:0,hipo:"Non",amenage:"Non",analyse:"Non réalisée",cpam:"Non",actions:""} : JSON.parse(JSON.stringify(y.accidents[idx]));
+  const sel=(k,l,v)=>`<select data-k="${k}">${l.map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select>`;
+  const box=document.getElementById("modalBox");
+  box.innerHTML=`<h3>${isNew?"Nouvel événement":"Modifier l'événement"}</h3>
+   <div class="grid g2">
+    <div class="field"><label>Type d'événement</label>${sel("type",TYPES_EVT,a.type)}</div>
+    <div class="field"><label>Date</label><input type="date" data-k="date" value="${esc(a.date)}"></div>
+    <div class="field"><label>Collaborateur</label><input data-k="nom" value="${esc(a.nom)}"></div>
+    <div class="field"><label>Catégorie professionnelle</label>${sel("cat",CATS_PRO,a.cat)}</div>
+    <div class="field"><label>Métier / poste</label><input data-k="metier" value="${esc(a.metier)}"></div>
+    <div class="field"><label>Lieu</label><input data-k="lieu" value="${esc(a.lieu)}"></div>
+    <div class="field"><label>Témoin</label><input data-k="temoin" value="${esc(a.temoin)}"></div>
+    <div class="field"><label>Jours d'arrêt</label><input type="number" data-k="jours" value="${n(a.jours)}"></div>
+   </div>
+   <div class="field"><label>Description des faits</label><textarea data-k="desc" rows="3">${esc(a.desc)}</textarea></div>
+   <div class="grid g2">
+    <div class="field"><label>Type de blessure</label>${sel("bless",[""].concat(BLESS),a.bless)}</div>
+    <div class="field"><label>Partie du corps</label>${sel("corps",[""].concat(ZONES.map(z=>z.k)),a.corps)}</div>
+    <div class="field"><label>Typologie du risque</label>${sel("risque",[""].concat(RISQUES),a.risque)}</div>
+    <div class="field"><label>Cause fondamentale</label>${sel("cause",[""].concat(CAUSES),a.cause)}</div>
+    <div class="field"><label>Événement HIPO</label>${sel("hipo",["Non","Oui"],a.hipo)}</div>
+    <div class="field"><label>Poste aménagé</label>${sel("amenage",["Non","Oui"],a.amenage)}</div>
+    <div class="field"><label>Analyse des causes</label>${sel("analyse",["Non réalisée","En cours","Terminée","Non nécessaire"],a.analyse)}</div>
+    <div class="field"><label>Déclaration CPAM</label>${sel("cpam",["Non","Oui"],a.cpam)}</div>
+   </div>
+   <div class="field"><label>Analyse et actions correctives (report au plan d'actions)</label><textarea data-k="actions" rows="3">${esc(a.actions)}</textarea></div>
+   <div class="row"><button class="btn btn-primary" id="accSave">Enregistrer</button><button class="btn btn-ghost" id="accCancel">Annuler</button>
+   ${isNew?"":'<span class="spacer"></span><button class="btn btn-warn" id="accDel">Supprimer</button>'}</div>`;
+  document.getElementById("modal").classList.add("open");
+  box.querySelector("#accCancel").onclick=()=>document.getElementById("modal").classList.remove("open");
+  box.querySelector("#accSave").onclick=()=>{
+    box.querySelectorAll("[data-k]").forEach(f=>{ a[f.dataset.k]= f.type==="number"? (parseFloat(f.value)||0) : f.value; });
+    if(isNew) Y().accidents.push(a); else Y().accidents[idx]=a;
+    Y().accidents.sort((p,q)=>String(p.date).localeCompare(String(q.date)));
+    saveDB(); document.getElementById("modal").classList.remove("open"); toast("Événement enregistré"); render();
+  };
+  if(!isNew) box.querySelector("#accDel").onclick=()=>{ if(confirm("Supprimer définitivement cet événement ?")){ Y().accidents.splice(idx,1); saveDB(); document.getElementById("modal").classList.remove("open"); render(); } };
+}/* ============================== OBJECTIFS SSE =========================== */
+function viewObj(){
+  const y=Y(), app=document.createElement("div");
+  const qc=trimestreCourant();
+  const evalues=y.objectifs.filter(o=>qc? o[qc].s : (o.T4.s||o.T3.s)).length;
+  const props=y.objectifs.reduce((a,o)=>a+TRIM.filter(t=>o[t].p&&o[t].c).length,0);
+
+  const c0=document.createElement("div"); c0.className="card c-v";
+  c0.innerHTML=`<h2><span class="bar"></span>${esc(y.politique.titre)}</h2>
+    <p class="sub">Slogan de l'année : <b style="color:var(--accent2)">« ${esc(y.politique.slogan)} »</b></p>
+    <div class="grid g2">
+      <div style="font-size:13.5px"><b>Nos engagements</b>
+        <ul style="margin:6px 0 0;padding-left:18px;color:var(--ink2)">${y.politique.engagements.map(e=>`<li>${esc(e)}</li>`).join("")}</ul></div>
+      <div style="font-size:13px;color:var(--ink2)"><b style="color:var(--ink)">Instance de suivi</b><br>${esc(DB.entreprise.instance)}</div>
+    </div>`;
+  app.appendChild(c0);
+
+  app.appendChild(el(`<div class="kpigrid" style="margin-bottom:14px">
+    ${kpi("Objectifs de la politique",fmt(y.objectifs.length,0),"exercice "+STATE.year)}
+    ${kpi("Suivi à date",qc||"—",qc?"trimestre en cours":"exercice clos")}
+    ${kpi("Objectifs évalués "+(qc||"T4"),fmt(evalues,0)+" / "+fmt(y.objectifs.length,0),"",statutDe(evalues,y.objectifs.length,"min"))}
+    ${kpi("Atteints ou en bonne voie",fmt(y.objectifs.filter(o=>{const s=qc?o[qc].s:(o.T4.s||o.T3.s);return s==="😀"||s==="🙂";}).length,0),"sur "+fmt(y.objectifs.length,0))}
+    ${kpi("Analyses proposées",fmt(props,0),"à relire et valider")}
+  </div>`));
+
+  if(props) app.appendChild(el(`<div class="note"><b>Analyses trimestrielles pré-remplies</b>
+    Les cases marquées <span class="prop">proposition</span> ont été rédigées automatiquement à partir des données saisies et des objectifs de la politique, pour vous faire gagner du temps. Relisez-les, corrigez-les, puis elles perdent leur marque dès que vous les modifiez. Une case marquée « proposition » n'est pas une preuve d'audit.</div>`));
+
+  const c=document.createElement("div"); c.className="card c-v";
+  c.innerHTML=`<h2><span class="bar"></span>Suivi des objectifs SSE ${STATE.year}</h2>
+    <p class="sub">Une ligne par objectif. Le trimestre en cours est surligné. En mode édition, un clic sur le pictogramme fait défiler les appréciations.</p>`;
+  const leg=el(`<div class="legend" style="margin-bottom:10px"></div>`);
+  STATUTS.filter(s=>s.k).forEach(s=>{ const sp=document.createElement("span"); sp.innerHTML=smileySVG(s.k,20)+" "+esc(s.lab); leg.appendChild(sp); });
+  leg.appendChild(el(`<span class="spacer"></span>`));
+  leg.appendChild(el(`<span><b style="color:var(--ink)">Trimestres affichés</b>
+    <select id="qFilter" style="border:1px solid var(--line2);border-radius:8px;padding:4px 8px;background:#fff">
+      <option value="">Tous</option>${TRIM.map(t=>`<option value="${t}"${STATE.trim===t?" selected":""}>${t}${t===qc?" (en cours)":""}</option>`).join("")}</select></span>`));
+  c.appendChild(leg);
+  const TSHOW = STATE.trim? [STATE.trim] : TRIM;
+  let h=`<div class="tw"><table class="objtbl"><thead><tr>
+    <th style="min-width:32px">N°</th><th style="min-width:220px">Objectif</th><th>Domaine</th>
+    <th style="min-width:170px">Indicateurs de suivi</th><th style="min-width:110px">Cible</th><th style="min-width:190px">Moyens mis en place (FOH)</th>
+    ${TSHOW.map(t=>`<th class="c ${t===qc?"qcur":""}" style="min-width:150px">${t}${t===qc?" · en cours":""}</th>`).join("")}
+    <th style="min-width:190px">Bilan annuel</th><th class="c editonly"></th></tr></thead><tbody>`;
+  y.objectifs.forEach((o,i)=>{
+    h+=`<tr><td class="c">${i+1}</td><td><b>${esc(o.lib)}</b></td><td>${domPill(o.dom)}</td>
+      <td><textarea rows="3" data-o="${i}" data-k="ind">${esc(o.ind)}</textarea></td>
+      <td><textarea rows="3" data-o="${i}" data-k="cible">${esc(o.cible)}</textarea></td>
+      <td><textarea rows="3" data-o="${i}" data-k="foh">${esc(o.foh)}</textarea></td>`;
+    TSHOW.forEach(t=>{
+      h+=`<td class="c ${t===qc?"qcur":""}">
+        <button class="smi" data-o="${i}" data-t="${t}" title="${esc((STATUTS.find(s=>s.k===o[t].s)||STATUTS[0]).lab)}">${smileySVG(o[t].s,28)}</button>
+        <textarea rows="3" placeholder="Analyse, preuves, écarts…" data-o="${i}" data-k="${t}.c">${esc(o[t].c)}</textarea>
+        ${o[t].p&&o[t].c?'<div class="prop">proposition</div>':""}
+        <button class="icobtn editonly" data-clrq="${i}|${t}" title="Effacer ce trimestre">🗑</button></td>`;
+    });
+    h+=`<td><textarea rows="3" data-o="${i}" data-k="bilan">${esc(o.bilan)}</textarea></td>
+      <td class="c editonly"><button class="icobtn objDel" data-i="${i}" title="Supprimer cet objectif">🗑</button></td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  c.appendChild(el(h));
+  c.appendChild(el(`<div class="row editonly" style="margin-top:12px"><button class="btn btn-ghost" id="objAdd">＋ Ajouter un objectif</button></div>`));
+  app.appendChild(c);
+
+  const cB=document.createElement("div"); cB.className="card c-v";
+  cB.innerHTML=`<h2><span class="bar"></span>Bilan du suivi trimestriel</h2><p class="sub">Nombre d'objectifs par appréciation et par trimestre.</p>`;
+  cB.appendChild(fig("Répartition des appréciations","",
+    barChart({labels:TRIM,series:STATUTS.filter(s=>s.k).map(s=>({name:s.lab,color:s.col,values:TRIM.map(t=>y.objectifs.filter(o=>o[t].s===s.k).length)})),directLabels:false,height:200}),
+    STATUTS.filter(s=>s.k).map(s=>({name:s.lab,color:s.col}))));
+  app.appendChild(cB);
+
+  setTimeout(()=>{
+    app.querySelectorAll("textarea[data-o]").forEach(f=>{
+      f.disabled=!STATE.edit;
+      const fit=()=>{ f.style.height="auto"; f.style.height=Math.max(52,f.scrollHeight+2)+"px"; };
+      fit(); f.addEventListener("input",fit);
+      f.addEventListener("change",e=>{ const i=+e.target.dataset.o,k=e.target.dataset.k,o=Y().objectifs[i];
+        if(k.indexOf(".")>0){ const [a,b]=k.split("."); o[a][b]=e.target.value; o[a].p=false; } else o[k]=e.target.value;
+        saveDB(); render(); });
+    });
+    app.querySelectorAll(".smi").forEach(b=>{
+      b.onclick=()=>{ if(!STATE.edit){ toast("Passez en mode édition pour modifier"); return; }
+        const i=+b.dataset.o,t=b.dataset.t,o=Y().objectifs[i];
+        const idx=STATUTS.findIndex(s=>s.k===(o[t].s||""));
+        o[t].s=STATUTS[(idx+1)%STATUTS.length].k; o[t].p=false; saveDB(); render(); };
+    });
+    app.querySelectorAll("[data-clrq]").forEach(b=>{
+      b.onclick=()=>{ const [i,t]=b.dataset.clrq.split("|"); Y().objectifs[+i][t]={s:"",c:"",p:false}; saveDB(); render(); };
+    });
+    app.querySelectorAll(".objDel").forEach(b=>{
+      b.onclick=()=>{ const i=+b.dataset.i;
+        if(confirm("Supprimer l'objectif « "+Y().objectifs[i].lib.slice(0,60)+"… » ?")){ Y().objectifs.splice(i,1); saveDB(); render(); toast("Objectif supprimé"); } };
+    });
+    const qf=document.getElementById("qFilter");
+    if(qf) qf.onchange=e=>{ STATE.trim=e.target.value||null; render(); };
+    const oa=document.getElementById("objAdd");
+    if(oa) oa.onclick=()=>{ Y().objectifs.push({dom:"Sécurité",lib:"Nouvel objectif",ind:"",cible:"",foh:"",
+      T1:{s:"",c:"",p:false},T2:{s:"",c:"",p:false},T3:{s:"",c:"",p:false},T4:{s:"",c:"",p:false},bilan:""});
+      saveDB(); render(); toast("Objectif ajouté — complétez le libellé"); };
+  },0);
+  return app;
+}
+/* ============================== BULLETIN HSE ============================ */
+const DOM_FLASH=[{k:"Sécurité",c:"#70ad47"},{k:"Santé",c:"#5b9bd5"},{k:"Environnement",c:"#c5e0b4"},{k:"MASE / culture HSE",c:"#a5a5a5"},{k:"Presqu'accident / SD",c:"#4472c4"},{k:"Bonne pratique",c:"#bfbfbf"}];
+function logoHTML(maxH){
+  return DB.settings.logo
+    ? `<img src="${esc(DB.settings.logo)}" alt="CM3" style="max-width:100%;max-height:${maxH||60}px">`
+    : LOGO_CM3;
+}
+function viewBul(){
+  const y=Y(), t=yearTotals(STATE.year), app=document.createElement("div");
+  const py=STATE.year-1, tp=DB.years[py]? yearTotals(py):null;
+  const gl=rolling12Last(STATE.year), glp=tp? rolling12Last(py):{tf1:0,tg:0};
+  app.appendChild(el(`<div class="card noprint"><h2><span class="bar"></span>Bulletin HSE — support d'affichage</h2>
+    <p class="sub">Trame « Reporting mensuel — Le bulletin de la sécu et de l'environnement ! ». Le bouton ouvre la boîte d'impression : choisissez <b>« Enregistrer au format PDF »</b>, format A4 paysage.</p>
+    <div class="row"><button class="btn btn-primary" id="btnPrint">🖨️ Générer le bulletin en PDF</button>
+    <button class="btn btn-ghost" id="btnPrintAll">📄 Dossier complet (bulletin + objectifs + indicateurs)</button></div></div>`));
+
+  const cell=v=>`<td class="${n(v)>0?"nz":"z"}">${fmt(v,0)}</td>`;
+  const rows=[
+    ["ATAA",'<small>(Accident Travail Avec Arrêt)</small>',tp?tp.ataa:0,tp?tp.atI:0,t.ataa,t.atI],
+    ["Nb de jours d'arrêt","",tp?tp.jours:0,0,t.jours,0],
+    ["ATSA",'<small>(Accident Travail Sans Arrêt)</small>',tp?tp.atsa:0,0,t.atsa,0],
+    ["AT Trajet",'<small>(déclaré à la CPAM)</small>',tp?tp.traj:0,0,t.traj,0],
+    ["AT Bénin",'<small>(inscrits au registre)</small>',tp?tp.ben:0,0,t.ben,0]
+  ];
+  const flashRows=(y.flashs&&y.flashs.length)
+    ? DOM_FLASH.map(d=>({name:d.k,color:d.c,values:MOIS.map((_,i)=> y.flashs.filter(f=>n(f.mois)===i+1&&f.dom===d.k).length)}))
+    : [{name:"Flashs diffusés",color:"#70ad47",values:y.months.map(m=>m.flash)}];
+  const auto=(v,c)=> v>=c?"😀": v>=c*.75?"😐":"😟";
+  const smi=(k,v,c)=>`<span class="smiley">${smileySVG(y.smileys[k]||auto(v,c),46)}</span>`;
+
+  const bul=el(`<div class="card"><div class="bulwrap"><div class="bulletin" id="bulRoot">
+    <div class="bul-head">
+      <div class="bul-logo">${logoHTML(60)}</div>
+      <div class="bul-band"><div class="t1">REPORTING MENSUEL</div><div class="t2">Le bulletin de la sécu et de l'environnement !</div></div>
+      <div class="bul-per">${esc(y.periode)}</div>
+    </div>
+    <div class="bul-r1">
+      <div class="bx red"><h4>Faits marquants «&nbsp;Santé - Sécurité&nbsp;» :</h4>
+        <ul>${(y.faits.secu||[]).concat(y.faits.sante||[]).map(f=>`<li>${esc(f)}</li>`).join("")||"<li>—</li>"}</ul></div>
+      <div class="bx blk"><h4>Divers</h4><ul>${(y.faits.divers||[]).map(f=>`<li>${esc(f)}</li>`).join("")||"<li>—</li>"}</ul></div>
+      <div class="bx grn"><h4>Environnement</h4><ul>${(y.faits.env||[]).map(f=>`<li>${esc(f)}</li>`).join("")||"<li>—</li>"}</ul></div>
+    </div>
+    <div class="bul-r2">
+      <div class="panel" id="pFlash">${smi("flash",t.flash,10)}<h5>Répartition des flashs mensuels</h5></div>
+      <div class="panel">${smi("acc",t.ataa?0:1,1)}
+        <table class="bul-tbl" style="margin-left:52px;width:calc(100% - 52px)">
+          <tr><th style="border:0;background:#fff"></th><th colspan="2">${py}</th><th colspan="2">${esc(y.periode)}</th></tr>
+          <tr><td class="lab">Salariés</td><td><b>CM3</b></td><td><b>Intérimaires</b></td><td><b>CM3</b></td><td><b>Intérimaires</b></td></tr>
+          ${rows.map(r=>`<tr><td class="lab">${esc(r[0])} ${r[1]}</td>${cell(r[2])}${cell(r[3])}${cell(r[4])}${cell(r[5])}</tr>`).join("")}
+          <tr><td class="lab">Nb de jours sans AT</td><td colspan="2" style="background:#f2f2f2"></td>
+              <td colspan="2" class="hi">${fmt(y.jourssansAT.valeur,0)}<div style="font-size:10px;font-weight:400">Depuis ${esc(y.jourssansAT.ref)}</div></td></tr>
+          <tr><td class="tx" rowspan="2">TG <small>(Taux de Gravité)</small></td>
+              <td>Annuel</td><td class="${tp&&tp.tg?"nz":"z"}">${fmt(tp?tp.tg:0,2)}</td><td>Annuel</td><td class="${t.tg?"nz":"z"}">${fmt(t.tg,2)}</td></tr>
+          <tr><td>Glissant</td><td class="${glp.tg?"nz":"z"}">${fmt(glp.tg,2)}</td><td>Glissant</td><td class="${gl.tg?"nz":"z"}">${fmt(gl.tg,2)}</td></tr>
+          <tr><td class="tx" rowspan="2">TF <small>(Taux de Fréquence)</small></td>
+              <td>Annuel</td><td class="${tp&&tp.tf1?"nz":"z"}">${fmt(tp?tp.tf1:0,2)}</td><td>Annuel</td><td class="${t.tf1?"nz":"z"}">${fmt(t.tf1,2)}</td></tr>
+          <tr><td>Glissant</td><td class="${glp.tf1?"nz":"z"}">${fmt(glp.tf1,2)}</td><td>Glissant</td><td class="${gl.tf1?"nz":"z"}">${fmt(gl.tf1,2)}</td></tr>
+        </table></div>
+    </div>
+    <div class="bul-r3">
+      <div class="panel" id="pQhp">${smi("qhp",t.qhpTaux,80)}<h5>Suivi du taux de participation au QHP<br><span style="font-size:13px">(objectif : 80 % du personnel hors administratif)</span></h5></div>
+      <div class="panel">${smi("rem",t.remTaux,100)}
+        <div class="bul-note"><u>Fiche de remontées Terrain :</u>${fmt(t.rem,0)} remontées émises prises en compte dans le PA</div>
+        <div style="text-align:center;font-size:13px;color:#333;margin-top:8px">
+          Objectif : ${fmt(DB.settings.remParPers,0)} remontées par collaborateur et par an —
+          <b>${fmt(t.remCibleAn,0)}</b> attendues pour ${fmt(t.concernes,1)} collaborateurs concernés · avancement <b>${pct(t.remTaux)}</b></div>
+        <div style="text-align:center;font-size:13px;color:#333;margin-top:6px">${fmt(t.vigR,0)} Vigiminutes réalisées (analyses de risque avant tâche)</div></div>
+    </div>
+    <div class="bul-foot"><span>Slogan ${STATE.year} : « ${esc(y.politique.slogan)} »</span><span style="margin-left:auto">${esc(DB.entreprise.certif)} — validité ${esc(DB.entreprise.valide)}</span></div>
+  </div></div></div>`);
+  app.appendChild(bul);
+  setTimeout(()=>{
+    const pf=bul.querySelector("#pFlash");
+    if(pf){ pf.appendChild(stackChart({labels:MOIS_C,series:flashRows,height:162}));
+      const lg=document.createElement("div");
+      lg.style.cssText="display:flex;gap:10px;flex-wrap:wrap;font-size:10.5px;color:#333;justify-content:center;margin-top:2px";
+      lg.innerHTML=flashRows.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px"><i style="width:10px;height:10px;background:${s.color};display:inline-block"></i>${esc(s.name)}</span>`).join("");
+      pf.appendChild(lg); }
+    const pq=bul.querySelector("#pQhp");
+    if(pq) pq.appendChild(barChart({labels:MOIS_C,series:[{name:"Participation réelle",color:"#c00000",
+      values:y.months.map(m=>{const e=n(m.qhpE)||n(m.eff); return n(m.qhpN)>0&&e>0? n(m.qhpP)/(e*n(m.qhpN))*100:0;})}],
+      target:80,targetLabel:"Objectif 80 %",fmtV:v=>fmt(v,0),unit:" %",height:162}));
+    const b=document.getElementById("btnPrint"); if(b) b.onclick=()=>window.print();
+    const b2=document.getElementById("btnPrintAll"); if(b2) b2.onclick=printFull;
+  },0);
+
+  const ed=document.createElement("div"); ed.className="card noprint";
+  ed.innerHTML=`<h2><span class="bar"></span>Contenu du bulletin — ${STATE.year}</h2><p class="sub">Une ligne par fait marquant.</p>`;
+  const g=el(`<div class="grid g2"></div>`);
+  [["secu","Faits marquants Sécurité"],["sante","Faits marquants Santé"],["env","Environnement"],["divers","Divers"]].forEach(([k,lab])=>{
+    const f=el(`<div class="field"><label>${lab}</label><textarea rows="4" data-fk="${k}">${esc((y.faits[k]||[]).join("\n"))}</textarea></div>`);
+    const ta=f.querySelector("textarea"); ta.disabled=!STATE.edit;
+    ta.addEventListener("change",e=>{ Y().faits[k]=e.target.value.split("\n").map(s=>s.trim()).filter(Boolean); saveDB(); render(); });
+    g.appendChild(f);
+  });
+  ed.appendChild(g);
+  ed.appendChild(el(`<h2 style="margin-top:14px;font-size:14px"><span class="bar"></span>Pictogrammes des encadrés</h2>
+    <p class="sub">Déduits des chiffres par défaut ; vous pouvez les forcer encadré par encadré.</p>`));
+  const gs=el(`<div class="grid g4"></div>`);
+  [["flash","Flashs mensuels"],["acc","Accidentologie"],["qhp","Participation QHP"],["rem","Remontées terrain"]].forEach(([k,lab])=>{
+    const f=el(`<div class="field"><label>${lab}</label>
+      <select data-sk="${k}"><option value="">Automatique</option>${STATUTS.filter(x=>x.k).map(x=>`<option value="${x.k}"${y.smileys[k]===x.k?" selected":""}>${x.lab}</option>`).join("")}</select>
+      <div class="prev" style="margin-top:6px"></div></div>`);
+    f.querySelector(".prev").innerHTML=smileySVG(y.smileys[k]||"",34);
+    const se=f.querySelector("select"); se.disabled=!STATE.edit;
+    se.addEventListener("change",e=>{ Y().smileys[k]=e.target.value; saveDB(); render(); });
+    gs.appendChild(f);
+  });
+  ed.appendChild(gs);
+  ed.appendChild(el(`<h2 style="margin-top:14px;font-size:14px"><span class="bar"></span>Journal des flashs SSE</h2>
+    <p class="sub">Renseignez chaque flash pour obtenir la répartition par domaine sur le graphique.</p>`));
+  let hf=`<div class="tw"><table><thead><tr><th>Mois</th><th>Domaine</th><th>Titre</th><th class="c editonly"></th></tr></thead><tbody>`;
+  (y.flashs||[]).forEach((f,i)=>{ hf+=`<tr><td>${MOIS[n(f.mois)-1]||"—"}</td><td>${esc(f.dom)}</td><td style="white-space:normal">${esc(f.titre)}</td>
+    <td class="c editonly"><button class="icobtn flDel" data-i="${i}" title="Supprimer">🗑</button></td></tr>`; });
+  if(!(y.flashs||[]).length) hf+=`<tr><td colspan="4" style="color:var(--faint)">Aucun flash enregistré.</td></tr>`;
+  hf+=`</tbody></table></div>`;
+  ed.appendChild(el(hf));
+  ed.appendChild(el(`<div class="row editonly" style="margin-top:10px">
+    <select id="flM" style="max-width:130px">${MOIS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("")}</select>
+    <select id="flD" style="max-width:190px">${DOM_FLASH.map(d=>`<option>${d.k}</option>`).join("")}</select>
+    <input id="flT" placeholder="Titre du flash" style="flex:1;min-width:180px">
+    <button class="btn btn-primary" id="flAdd">Ajouter</button></div>`));
+  app.appendChild(ed);
+  setTimeout(()=>{
+    ed.querySelectorAll(".flDel").forEach(b=> b.onclick=()=>{ Y().flashs.splice(+b.dataset.i,1); saveDB(); render(); });
+    const a=document.getElementById("flAdd");
+    if(a) a.onclick=()=>{ const yy=Y(); if(!yy.flashs) yy.flashs=[];
+      yy.flashs.push({mois:+document.getElementById("flM").value,dom:document.getElementById("flD").value,titre:document.getElementById("flT").value});
+      saveDB(); render(); toast("Flash ajouté"); };
+    ed.querySelectorAll("#flM,#flD,#flT").forEach(i=>{ if(!STATE.edit) i.disabled=true; });
+  },0);
+  return app;
+}
+function printFull(){
+  const y=Y(), L=indicateurs(STATE.year), qc=trimestreCourant();
+  const host=document.createElement("div"); host.id="pfh"; host.className="prt";
+  host.innerHTML=`<div class="pagebreak"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="width:90px">${logoHTML(40)}</div>
+      <div><h2 style="font-size:17px;margin:0">Suivi des objectifs SSE ${STATE.year} — CM3</h2>
+      <div style="font-size:11px;color:#555">Slogan : « ${esc(y.politique.slogan)} » · ${esc(DB.entreprise.instance)}${qc?" · trimestre en cours : "+qc:""}</div></div></div>
+    <table style="width:100%"><thead><tr><th>Objectif</th><th>Domaine</th><th>Indicateurs</th><th>Cible</th><th>Moyens (FOH)</th>${TRIM.map(t=>`<th>${t}</th>`).join("")}<th>Bilan</th></tr></thead>
+      <tbody>${y.objectifs.map(o=>`<tr><td style="white-space:normal">${esc(o.lib)}</td><td>${esc(o.dom)}</td><td style="white-space:normal">${esc(o.ind)}</td><td style="white-space:normal">${esc(o.cible)}</td><td style="white-space:normal">${esc(o.foh)}</td>${TRIM.map(t=>`<td style="text-align:center;white-space:normal;min-width:110px">${smileySVG(o[t].s,16)}<div style="font-size:8.5px">${esc(o[t].c)}</div></td>`).join("")}<td style="white-space:normal">${esc(o.bilan)}</td></tr>`).join("")}</tbody></table>
+    <div class="pagebreak"></div>
+    <h2 style="font-size:17px;margin:0 0 8px">Indicateurs SSE ${STATE.year} — CM3</h2>
+    ${["Santé","Sécurité","Environnement","Système"].map(d=>`<h3 style="font-size:12.5px;margin:9px 0 3px">${d}</h3>
+      <table style="width:100%"><thead><tr><th style="width:30px"></th><th>Indicateur</th><th>Type</th><th>${STATE.year}</th><th>Cible</th><th>Source</th></tr></thead>
+      <tbody>${L.filter(r=>r.dom===d).map(r=>`<tr><td style="text-align:center">${smileySVG(ST2K[r.st]!==undefined?ST2K[r.st]:"",14)}</td><td style="white-space:normal">${esc(r.lib)}</td><td>${r.type}</td><td><b>${r.val}</b></td><td>${esc(r.cible)}</td><td>${esc(r.src)}</td></tr>`).join("")}</tbody></table>`).join("")}`;
+  document.getElementById("app").appendChild(host);
+  window.print();
+  setTimeout(()=>host.remove(),900);
+}
+/* ============================== SYNC / API ============================== */
+let pushTimer=null;
+function setSync(s,m){ STATE.sync={state:s,msg:m||STATE.sync.msg};
+  const d=document.getElementById("syncDot"); if(d) d.className="dot "+(s==="ok"?"ok":s==="err"?"err":s==="busy"?"warn":""); }
+function queuePush(){ clearTimeout(pushTimer); pushTimer=setTimeout(()=>syncPush(true),1500); }
+async function api(action,payload){
+  const url=DB.settings.webhook; if(!url) throw new Error("Aucun webhook configuré.");
+  const body=JSON.stringify(Object.assign({action:action,pass:DB.settings.pass||"",device:DB.settings.device||""},payload||{}));
+  const r=await fetch(url,{method:"POST",body:body,redirect:"follow"});
+  const txt=await r.text(); let j;
+  try{ j=JSON.parse(txt); }catch(e){ throw new Error("Réponse inattendue : "+txt.slice(0,110)); }
+  if(!j.ok) throw new Error(j.error||"Erreur serveur");
+  return j;
+}
+async function syncPull(silent){
+  try{ setSync("busy","Récupération…"); const j=await api("pull");
+    if(j.data&&j.data.years){ DB=deepMerge(DB,j.data); migrate(); lsSet(STORE_KEY,JSON.stringify(DB)); }
+    setSync("ok","Synchronisé à "+new Date().toLocaleTimeString("fr-FR")); if(!silent){ render(); toast("Données récupérées"); }
+  }catch(e){ setSync("err",e.message); if(!silent) toast("Synchronisation impossible : "+e.message); }
+}
+async function syncPush(silent){
+  try{ setSync("busy","Envoi…"); await api("push",{data:DB}); setSync("ok","Enregistré sur le classeur partagé"); if(!silent) toast("Données envoyées"); }
+  catch(e){ setSync("err",e.message); if(!silent) toast("Envoi impossible : "+e.message); }
+}
+async function syncNow(){
+  if(!DB.settings.webhook){ STATE.tab="set"; render(); toast("Renseignez d'abord le webhook dans les Réglages"); return; }
+  await syncPull(true); await syncPush(true); render(); toast(STATE.sync.msg);
+}
+
+/* ============================== RÉGLAGES =============================== */
+function viewSet(){
+  const app=document.createElement("div"), s=DB.settings;
+  const c=document.createElement("div"); c.className="card c-b";
+  c.innerHTML=`<h2><span class="bar"></span>Synchronisation</h2>
+    <p class="sub">Sans webhook, l'application fonctionne en local sur cet appareil. Une fois branchée, chaque enregistrement est répliqué pour tous les utilisateurs.
+    <br><b>Importer depuis le classeur</b> relit les onglets du classeur de collecte « Donnees SSE CM3 » déposé dans le même Google Sheet et écrase les valeurs correspondantes.</p>`;
+  c.appendChild(el(`<div class="grid g2">
+    <div class="field"><label>Adresse du webhook (URL /exec)</label><input id="stWeb" value="${esc(s.webhook)}" placeholder="https://script.google.com/macros/s/…/exec"><div class="hint">Apps Script déployé en « Application Web », exécution en votre nom, accès « Tout le monde ».</div></div>
+    <div class="field"><label>Mot de passe éditeur</label><input id="stPass" type="password" value="${esc(s.pass)}"><div class="hint">Les lecteurs le laissent vide.</div></div>
+    <div class="field"><label>Nom de cet appareil</label><input id="stDev" value="${esc(s.device)}" placeholder="Poste HSE"></div>
+    <div class="field"><label>Synchronisation automatique</label><select id="stAuto"><option value="1"${s.autoSync?" selected":""}>Activée</option><option value="0"${!s.autoSync?" selected":""}>Désactivée</option></select></div>
+  </div>`));
+  c.appendChild(el(`<div class="row"><button class="btn btn-primary" id="stSave">Enregistrer les réglages</button>
+    <button class="btn btn-ghost" id="stTest">Tester la connexion</button>
+    <button class="btn btn-ghost" id="stPull">⬇ Récupérer</button><button class="btn btn-ghost" id="stPush">⬆ Envoyer</button>
+    <button class="btn btn-ghost" id="stImport">📥 Importer depuis le classeur</button>
+    <span class="spacer"></span><span style="font-size:12.5px;color:var(--ink2)">${esc(STATE.sync.msg||"")}</span></div>`));
+  app.appendChild(c);
+
+  const cO=document.createElement("div"); cO.className="card c-g";
+  cO.innerHTML=`<h2><span class="bar"></span>Règles de calcul</h2>
+    <p class="sub">Ces paramètres pilotent l'objectif de remontées terrain affiché sur le tableau de bord et le bulletin.</p>`;
+  const gO=el(`<div class="grid g3">
+    <div class="field"><label>Remontées attendues par personne et par an</label><input type="number" id="rgRem" value="${n(s.remParPers)}"></div>
+    <div class="field"><label>Dirigeants non concernés (nb)</label><input type="number" id="rgDir" value="${n(s.dirigeants)}"><div class="hint">Retirés de l'effectif du mois pour le calcul de la cible.</div></div>
+    <div class="field"><label>Cible ${STATE.year} calculée</label><input value="${fmt(yearTotals(STATE.year).remCibleAn,0)} remontées" disabled><div class="hint">${fmt(yearTotals(STATE.year).concernes,1)} collaborateurs concernés en moyenne.</div></div>
+  </div>`);
+  gO.querySelectorAll("#rgRem,#rgDir").forEach(i=>i.disabled=!STATE.edit);
+  cO.appendChild(gO); app.appendChild(cO);
+
+  const cC=document.createElement("div"); cC.className="card c-v";
+  cC.innerHTML=`<h2><span class="bar"></span>Certification MASE</h2>`;
+  const gC=el(`<div class="grid g2">
+    <div class="field"><label>Certification</label><input id="enCert" value="${esc(DB.entreprise.certif)}"></div>
+    <div class="field"><label>Validité (texte affiché)</label><input id="enVal" value="${esc(DB.entreprise.valide)}"></div>
+    <div class="field"><label>Date de fin de validité (AAAA-MM-JJ)</label><input id="enFin" value="${esc(DB.entreprise.certifFin||"")}"><div class="hint">Alimente le compte à rebours du tableau de bord.</div></div>
+    <div class="field"><label>Instance de suivi</label><input id="enInst" value="${esc(DB.entreprise.instance)}"></div>
+  </div>`);
+  gC.querySelectorAll("input").forEach(i=>i.disabled=!STATE.edit);
+  cC.appendChild(gC);
+  cC.appendChild(el(`<div class="row" style="align-items:flex-start">
+    ${s.certif?`<img src="${esc(s.certif)}" id="certPrev" style="max-height:150px;border:1px solid var(--line2);border-radius:8px;cursor:zoom-in;background:#fff" title="Cliquer pour agrandir">`
+      :'<span style="color:var(--faint);font-size:13px">Aucun certificat enregistré. Ajoutez une image (photo ou scan) : elle sera cliquable et zoomable depuis le tableau de bord.</span>'}
+    <span class="spacer"></span>
+    <button class="btn btn-ghost editonly" id="certPick">📜 Choisir une image du certificat</button>
+    <input type="file" id="certFile" accept="image/*" style="display:none">
+    ${s.certif?'<button class="btn btn-warn editonly" id="certDel">🗑 Retirer</button>':''}</div>`));
+  app.appendChild(cC);
+
+  const cL=document.createElement("div"); cL.className="card";
+  cL.innerHTML=`<h2><span class="bar"></span>Logo de l'entreprise</h2>
+    <p class="sub">Un logo CM3 vectoriel est intégré par défaut. Vous pouvez le remplacer par votre fichier officiel.</p>`;
+  cL.appendChild(el(`<div class="row">
+    <div style="width:140px;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:8px">${logoHTML(50)}</div>
+    <span class="spacer"></span>
+    <button class="btn btn-ghost editonly" id="logoPick">📁 Remplacer le logo</button>
+    <input type="file" id="logoFile" accept="image/*" style="display:none">
+    ${s.logo?'<button class="btn btn-warn editonly" id="logoDel">Revenir au logo intégré</button>':''}</div>`));
+  app.appendChild(cL);
+
+  const c3=document.createElement("div"); c3.className="card";
+  c3.innerHTML=`<h2><span class="bar"></span>Données</h2><p class="sub">Dernière modification : ${DB.meta.updatedAt? new Date(DB.meta.updatedAt).toLocaleString("fr-FR"):"—"}</p>`;
+  c3.appendChild(el(`<div class="row"><button class="btn btn-ghost" id="dlBak">💾 Télécharger une sauvegarde</button>
+    <button class="btn btn-ghost" id="upBak">📂 Restaurer</button><input type="file" id="fileBak" accept="application/json" style="display:none">
+    <span class="spacer"></span><button class="btn btn-warn" id="rstBak">Réinitialiser aux données d'origine</button></div>`));
+  app.appendChild(c3);
+
+  setTimeout(()=>{
+    const q=id=>document.getElementById(id);
+    q("stSave").onclick=()=>{ s.webhook=q("stWeb").value.trim(); s.pass=q("stPass").value; s.device=q("stDev").value.trim(); s.autoSync=q("stAuto").value==="1"; saveDB(true); toast("Réglages enregistrés"); render(); };
+    q("stTest").onclick=async()=>{ try{ await api("ping"); setSync("ok","Connexion OK"); toast("Connexion réussie ✔"); }catch(e){ setSync("err",e.message); toast("Échec : "+e.message); } };
+    q("stPull").onclick=()=>syncPull(false); q("stPush").onclick=()=>syncPush(false);
+    q("stImport").onclick=async()=>{
+      if(!DB.settings.webhook){ toast("Renseignez d'abord le webhook"); return; }
+      if(!confirm("Importer les données du classeur de collecte ?\n\nLes valeurs du classeur remplacent celles de l'application pour les onglets renseignés. Pensez à télécharger une sauvegarde avant.")) return;
+      try{ setSync("busy","Import en cours…"); const j=await api("import");
+        if(!j.data||!j.data.years) throw new Error("Le classeur ne contient pas les onglets attendus.");
+        DB=deepMerge(DB,j.data); migrate(); saveDB(true); setSync("ok","Classeur importé"); render();
+        toast("Données du classeur importées");
+      }catch(e){ setSync("err",e.message); toast("Import impossible : "+e.message); } };
+    q("rgRem").addEventListener("change",e=>{ DB.settings.remParPers=parseFloat(e.target.value)||0; saveDB(); render(); });
+    q("rgDir").addEventListener("change",e=>{ DB.settings.dirigeants=parseFloat(e.target.value)||0; saveDB(); render(); });
+    const pickImg=(inputId,cb)=>{ const f=q(inputId).files[0]; if(!f) return;
+      if(f.size>1200000){ toast("Image trop lourde (1,2 Mo max)"); return; }
+      const rd=new FileReader(); rd.onload=()=>{ cb(rd.result); }; rd.readAsDataURL(f); };
+    const cp=q("certPick"); if(cp) cp.onclick=()=>q("certFile").click();
+    q("certFile").onchange=()=>pickImg("certFile",d=>{ DB.settings.certif=d; saveDB(true); render(); toast("Certificat enregistré"); });
+    const cd=q("certDel"); if(cd) cd.onclick=()=>{ DB.settings.certif=""; saveDB(true); render(); };
+    const cprev=q("certPrev"); if(cprev) cprev.onclick=()=>openViewer(DB.settings.certif,"Certificat MASE");
+    const lp=q("logoPick"); if(lp) lp.onclick=()=>q("logoFile").click();
+    q("logoFile").onchange=()=>pickImg("logoFile",d=>{ DB.settings.logo=d; saveDB(true); render(); toast("Logo enregistré"); });
+    const ld=q("logoDel"); if(ld) ld.onclick=()=>{ DB.settings.logo=""; saveDB(true); render(); };
+    q("dlBak").onclick=()=>{ const b=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
+      const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="reporting-hse-cm3-"+new Date().toISOString().slice(0,10)+".json"; a.click(); };
+    q("upBak").onclick=()=>q("fileBak").click();
+    q("fileBak").onchange=e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+      rd.onload=()=>{ try{ DB=deepMerge(JSON.parse(JSON.stringify(DB_SEED)),JSON.parse(rd.result)); migrate(); saveDB(true); render(); toast("Sauvegarde restaurée"); }catch(err){ toast("Fichier illisible"); } };
+      rd.readAsText(f); };
+    q("rstBak").onclick=()=>{ if(confirm("Réinitialiser toutes les données de cet appareil aux valeurs d'origine ?")){ DB=JSON.parse(JSON.stringify(DB_SEED)); migrate(); saveDB(true); render(); } };
+    ["enCert:certif","enVal:valide","enFin:certifFin","enInst:instance"].forEach(p=>{ const [id,k]=p.split(":");
+      q(id).addEventListener("change",e=>{ DB.entreprise[k]=e.target.value; saveDB(); }); });
+  },0);
+  return app;
+}
+
+/* ================================ RENDER ================================ */
+const TABS=[
+  {id:"dash",lab:"Tableau de bord",ic:"📊"},
+  {id:"saisie",lab:"Saisie",ic:"✍️"},
+  {id:"obj",lab:"Objectifs SSE",ic:"🎯"},
+  {id:"comp",lab:"Comparaison",ic:"📈"},
+  {id:"bul",lab:"Bulletin",ic:"📰"},
+  {id:"set",lab:"Réglages",ic:"⚙️"}
+];
+function render(){
+  document.body.classList.toggle("edit",STATE.edit);
+  document.getElementById("hlogo").innerHTML=logoHTML(30);
+  const ys=document.getElementById("yearsel");
+  ys.innerHTML=YEARS.map(v=>`<button data-y="${v}" aria-pressed="${v===STATE.year}">${v}</button>`).join("");
+  ys.querySelectorAll("button").forEach(b=> b.onclick=()=>{ STATE.year=+b.dataset.y; STATE.zone=null; render(); });
+  const msel=document.getElementById("moissel");
+  msel.innerHTML=`<option value="">Année entière</option>`+MOIS.map((m,i)=>`<option value="${i}"${STATE.mois===i?" selected":""}>${m}</option>`).join("");
+  msel.onchange=e=>{ STATE.mois = e.target.value===""? null : +e.target.value; render(); };
+  const tb=document.getElementById("tabs");
+  tb.innerHTML=TABS.map(t=>`<button role="tab" data-t="${t.id}" class="${t.id===STATE.tab?"on":""}"><span class="ic">${t.ic}</span>${t.lab}</button>`).join("");
+  tb.querySelectorAll("button").forEach(b=> b.onclick=()=>{ STATE.tab=b.dataset.t; render(); scrollTo(0,0); });
+  const bm=document.getElementById("btnMode");
+  bm.textContent=STATE.edit?"✏️ Édition":"🔒 Consultation"; bm.classList.toggle("on",STATE.edit);
+  const app=document.getElementById("app"); app.innerHTML="";
+  app.appendChild(({dash:viewDash,saisie:viewSaisie,obj:viewObj,comp:viewComp,bul:viewBul,set:viewSet}[STATE.tab]||viewDash)());
+  setSync(STATE.sync.state);
+}
+document.getElementById("btnMode").onclick=()=>{ STATE.edit=!STATE.edit; render(); toast(STATE.edit?"Mode édition activé":"Mode consultation"); };
+document.getElementById("btnSync").onclick=syncNow;
+document.getElementById("modal").onclick=e=>{ if(e.target.id==="modal") e.target.classList.remove("open"); };
+document.getElementById("vClose").onclick=()=>document.getElementById("viewer").classList.remove("open");
+document.getElementById("vIn").onclick=()=>zoomViewer(1.35);
+document.getElementById("vOut").onclick=()=>zoomViewer(1/1.35);
+document.getElementById("vFit").onclick=()=>zoomViewer(0);
+document.getElementById("vImg").onclick=()=>zoomViewer(1.35);
+(function dragStage(){
+  const st=document.getElementById("vStage"); let d=false,sx=0,sy=0,sl=0,stp=0;
+  st.addEventListener("mousedown",e=>{ d=true; st.classList.add("drag"); sx=e.clientX; sy=e.clientY; sl=st.scrollLeft; stp=st.scrollTop; e.preventDefault(); });
+  addEventListener("mousemove",e=>{ if(!d) return; st.scrollLeft=sl-(e.clientX-sx); st.scrollTop=stp-(e.clientY-sy); });
+  addEventListener("mouseup",()=>{ d=false; st.classList.remove("drag"); });
+})();
+addEventListener("keydown",e=>{ if(e.key==="Escape"){ document.getElementById("modal").classList.remove("open"); document.getElementById("viewer").classList.remove("open"); } });
+(function init(){
+  const cy=new Date().getFullYear(); if(YEARS.indexOf(cy)>=0) STATE.year=cy;
+  render();
+  if(DB.settings.webhook&&DB.settings.autoSync) syncPull(false);
+})();
+</script>
+</body>
+</html>
