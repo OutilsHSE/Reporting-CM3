@@ -785,7 +785,6 @@ function totals(year, mIdx){
     add(t.rem, t.remCibleAn,true);
     add(t.vms,12,true);
     add(t.aud,1,true);
-    add(t.flash,10,true);
     t.avancement = comps.length? comps.reduce((a,b)=>a+b,0)/comps.length : 0;
     t.avancementNb = comps.length;
   })();
@@ -1121,7 +1120,6 @@ function indicateurs(year){
     I("Sécurité","Suivi","Vigiminutes réalisées",fmt(t.vigR,0),t.vigR,"—",null,null,"Saisie mensuelle"),
     I("Sécurité","Suivi","Remontées terrain suivies",fmt(t.rem,0),t.rem,fmt(t.remCibleAn,0)+" / an",t.remCibleAn,"cumul","Saisie mensuelle"),
     I("Sécurité","Suivi","Visites terrain / VMS",fmt(t.vms,0),t.vms,"12 / an",12,"cumul","Saisie mensuelle"),
-    I("Sécurité","Suivi","Flashs SSE diffusés",fmt(t.flash,0),t.flash,"10 / an",10,"cumul","Saisie mensuelle"),
     /* --- SANTÉ --- */
     I("Santé","Résultat","Maladies professionnelles reconnues",fmt(t.mp,0),t.mp,"0",0,"max","Saisie mensuelle"),
     I("Santé","Résultat","Personnel formé au SST",pct(x.sst),x.sst,"50 % (vert ≥ 33 %)",50,"min","Bilan des formations",V_SST),
@@ -1153,7 +1151,7 @@ function viewDash(){
   const app=document.createElement("div");
   const P=prorata(STATE.year);
   if(mi!=null) app.appendChild(el(`<div class="note info"><b>Vue mensuelle — ${MOIS[mi]} ${STATE.year}</b>Les compteurs portent sur ce seul mois. Les graphiques restent annuels, le mois sélectionné y est surligné. Repassez sur « Année entière » dans l'en-tête pour le cumul.</div>`));
-  else if(P<1) app.appendChild(el(`<div class="note info"><b>Exercice en cours — ${Math.round(P*12)} mois révolus sur 12</b>Les objectifs annuels cumulatifs (QHP, remontées, visites terrain, flashs, audits) sont comparés à leur cible <b>proratisée à date</b>, pas à la cible de fin d'année.</div>`));
+  else if(P<1) app.appendChild(el(`<div class="note info"><b>Exercice en cours — ${Math.round(P*12)} mois révolus sur 12</b>Les objectifs annuels cumulatifs (QHP, remontées, visites terrain, audits) sont comparés à leur cible <b>proratisée à date</b>, pas à la cible de fin d'année.</div>`));
 
   /* --- Bandeau --- */
   const band=document.createElement("div"); band.className="grid g4"; band.style.marginBottom="14px";
@@ -1278,7 +1276,6 @@ function viewDash(){
     ${kpi("Participation",pct(ta.qhpTaux),"cible 80 %",statutDe(ta.qhpTaux,80,"min"))}
     ${kpi("Thèmes traités",fmt(ta.themes,0),fmt(ta.thS,0)+" santé · "+fmt(ta.thSe,0)+" sécu. · "+fmt(ta.thE,0)+" env.")}
     ${kpi("Diversité des domaines",fmt(ta.diversite,0)+" / 3","Santé · Sécurité · Environnement",statutDe(ta.diversite,3,"min"))}
-    ${kpi("Flashs SSE diffusés",fmt(ta.flash,0),aDate(10,STATE.year),statutDe(ta.flash,10,"cumul"))}
   </div>`));
   const g3=el(`<div class="grid g2"></div>`);
   g3.appendChild(fig("Participation aux QHP","Objectif : 80 % du personnel hors administratif",
@@ -1372,7 +1369,7 @@ function viewDash(){
   /* --- Volet 4 (rose) : plan d'actions et avancement annuel --- */
   const v4=document.createElement("div"); v4.className="card c-rose";
   v4.innerHTML=`<h2><span class="bar"></span>Plan d'actions et avancement annuel — ${STATE.year}</h2>
-    <p class="sub">Avancement global du programme SSE de l'exercice, calculé sur ${fmt(ta.avancementNb,0)} composantes renseignées (plan d'actions, formations, VGP, QHP, remontées, visites terrain, audits, flashs), chacune rapportée à sa cible ${P<1?"proratisée à date":"annuelle"}.</p>`;
+    <p class="sub">Avancement global du programme SSE de l'exercice, calculé sur ${fmt(ta.avancementNb,0)} composantes renseignées (plan d'actions, VGP, QHP, remontées terrain, visites terrain, audits internes), chacune rapportée à sa cible ${P<1?"proratisée à date":"annuelle"}.</p>`;
   const gv=el(`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;align-items:center"></div>`);
   const gb=el(`<div class="kpi" style="display:grid;place-items:center;padding:16px"></div>`);
   gb.appendChild(gauge(ta.avancement,"Avancement du programme SSE",P<1?"à date":"sur l'exercice",gaugeCls(ta.avancement,100)));
@@ -1441,7 +1438,7 @@ function viewComp(){
     ["TF1",v=>fmt(v.tf1,2)],["TF2",v=>fmt(v.tf2,2)],["Taux de gravité",v=>fmt(v.tg,2)],
     ["Vigiminutes réalisées",v=>fmt(v.vigR,0)],["Remontées terrain suivies",v=>fmt(v.rem,0)],
     ["QHP réalisés",v=>fmt(v.qhpN,0)],["Participation QHP",v=>pct(v.qhpTaux)],["Diversité des thèmes",v=>fmt(v.diversite,0)+" / 3"],
-    ["Visites terrain / VMS",v=>fmt(v.vms,0)],["Flashs SSE diffusés",v=>fmt(v.flash,0)],
+    ["Visites terrain / VMS",v=>fmt(v.vms,0)],
     ["Accueils sécurité",v=>fmt(v.acc,0)+" / "+fmt(v.na,0)],["Formations réalisées",v=>fmt(v.form,0)],
     ["Audits internes",v=>fmt(v.aud,0)],["Avancement du plan d'actions",v=>pct(v.pa)]];
   c2.appendChild(el(`<div class="tw"><table><thead><tr><th>Indicateur</th>${YEARS.map(v=>`<th class="n">${v}${v===new Date().getFullYear()?" *":""}</th>`).join("")}</tr></thead>
