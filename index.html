@@ -155,6 +155,9 @@ tr.cur td{background:#fff8e9!important;box-shadow:inset 3px 0 0 var(--accent)}
 figcaption{font-size:13.5px;font-weight:700;margin-bottom:2px;color:var(--ink)}
 .figsub{font-size:12px;color:var(--ink2);margin-bottom:9px}
 .legend{display:flex;gap:13px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:8px 0 2px;align-items:center}
+.qsel{display:inline-flex;align-items:center;gap:6px}
+.qsel b{color:var(--ink)}
+.qsel select.qana{border:1px solid var(--line2);border-radius:8px;padding:4px 8px;background:#fff;font:inherit;font-size:12px;color:var(--ink)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .swatch{width:11px;height:11px;border-radius:3px;flex:none}
 svg .grid line{stroke:#e8edf3}
@@ -678,7 +681,7 @@ function loadDB(){
   try{ return deepMerge(JSON.parse(JSON.stringify(DB_SEED)),JSON.parse(raw)); }catch(e){ return JSON.parse(JSON.stringify(DB_SEED)); }
 }
 let DB=loadDB();
-let STATE={year:2026, mois:null, trim:null, tab:"dash", edit:false, sync:{state:"idle",msg:"Données locales"}, zone:null};
+let STATE={year:2026, mois:null, trim:null, qana:null, tab:"dash", edit:false, sync:{state:"idle",msg:"Données locales"}, zone:null};
 const YEARS=[2024,2025,2026];
 
 const EXTRA_DEF={
@@ -816,6 +819,36 @@ function trimestreCourant(){
   const d=new Date();
   if(d.getFullYear()!==STATE.year) return null;
   return "T"+(Math.floor(d.getMonth()/3)+1);
+}
+/* Dernier trimestre CLOS de l'exercice affiché.
+   Un trimestre en cours n'est jamais considéré comme terminé : en août 2026,
+   le dernier trimestre clos est T2, pas T3. */
+function trimestreClos(year){
+  const d=new Date(), cy=d.getFullYear();
+  year = year==null? STATE.year : year;
+  if(year<cy) return "T4";          // exercice clos
+  if(year>cy) return null;          // exercice à venir
+  const q=Math.floor(d.getMonth()/3)+1;
+  return q>1 ? "T"+(q-1) : null;    // T1 en cours : aucun trimestre clos sur l'exercice
+}
+/* Trimestre sur lequel porte l'analyse : celui choisi par l'utilisateur,
+   sinon le dernier trimestre clos. */
+function trimestreAnalyse(year){
+  return STATE.qana || trimestreClos(year);
+}
+/* Sélecteur « trimestre analysé » — réutilisé sur le tableau de bord et dans l'onglet Objectifs */
+function selTrim(id){
+  const auto=trimestreClos(), qc=trimestreCourant();
+  const opt=t=>`<option value="${t}"${STATE.qana===t?" selected":""}>${t}${t===qc?" · en cours":(t===auto?" · clos":"")}</option>`;
+  return `<span class="qsel"><b>Trimestre analysé</b>
+    <select id="${id}" class="qana">
+      <option value=""${STATE.qana?"":" selected"}>Auto${auto?" ("+auto+")":""}</option>
+      ${TRIM.map(opt).join("")}
+    </select></span>`;
+}
+function brancheSelTrim(root,id){
+  const e=root.querySelector("#"+id);
+  if(e) e.onchange=ev=>{ STATE.qana=ev.target.value||null; render(); };
 }
 
 /* ============================== SVG / CHARTS ============================== */
@@ -1173,10 +1206,12 @@ function viewDash(){
   app.appendChild(band);
 
   /* --- Objectifs de la politique, à date --- */
-  const qc=trimestreCourant(), qref=qc||"T4";
+  const qc=trimestreCourant(), qa=trimestreAnalyse(), qref=qa||"T4";
+  const libQ = STATE.qana? "trimestre choisi" : (qa===qc? "trimestre en cours" : (trimestreClos()? "dernier trimestre clos" : "trimestre de clôture"));
   const cO=document.createElement("div"); cO.className="card c-v";
   cO.innerHTML=`<h2><span class="bar"></span>Objectifs de la politique MASE — suivi à date (${qref})</h2>
-    <p class="sub">Appréciation portée sur le trimestre ${qc?"en cours":"de clôture"}. Le détail et les commentaires sont dans l'onglet « Objectifs SSE ».</p>`;
+    <p class="sub">Appréciation portée sur le ${libQ}${qa===qc?"":" — le trimestre en cours n'est pas encore analysable"}. Le détail et les commentaires sont dans l'onglet « Objectifs SSE ».</p>`;
+  cO.appendChild(el(`<div class="legend" style="margin-bottom:10px"><span class="spacer"></span>${selTrim("qAnaDash")}</div>`));
   let ho=`<div class="tw"><table><thead><tr><th class="c" style="width:40px">${qref}</th><th>Objectif</th><th>Domaine</th><th>Cible</th><th>Analyse ${qref}</th></tr></thead><tbody>`;
   y.objectifs.forEach(o=>{
     ho+=`<tr><td class="c">${smileySVG(o[qref].s,26)}</td><td style="white-space:normal;max-width:300px"><b>${esc(o.lib)}</b></td>
@@ -1189,7 +1224,7 @@ function viewDash(){
   /* --- Sécurité --- */
   const c1=document.createElement("div"); c1.className="card c-r";
   c1.innerHTML=`<h2><span class="bar"></span>Sécurité — résultats${mi!=null?" · "+MOIS[mi]:""}</h2>
-    <p class="sub">TF1 = AT avec arrêt × 1 000 000 / heures travaillées · TF2 inclut les AT sans arrêt · TG = jours d'arrêt × 1 000 / heures travaillées.</p>`;
+    <p class="sub">TF1 = AT <b>avec arrêt</b> × 1 000 000 / heures travaillées — c'est le taux suivi. TF2 ajoute les AT sans arrêt, il n'est donné qu'à titre de comparaison. TG = jours d'arrêt × 1 000 / heures travaillées.</p>`;
   c1.appendChild(el(`<div class="kpigrid">
     ${kpi("AT avec arrêt",fmt(t.ataa,0),"cible 0",statutDe(t.ataa,0,"max",null,RG_AT))}
     ${kpi("AT sans arrêt",fmt(t.atsa,0),"cible 0",statutDe(t.atsa,0,"max",null,RG_ATSA))}
@@ -1202,7 +1237,7 @@ function viewDash(){
   </div>`));
   const ms=monthlySeries(STATE.year).filter(m=>m.actif), labs=ms.map(m=>m.court);
   const g=el(`<div class="grid g2" style="margin-top:16px"></div>`);
-  g.appendChild(fig("TF2 cumulé","Cumul depuis janvier",lineChart({labels:labs,values:ms.map(m=>m.cumul.tf2),color:"#2a78d6",name:"TF2",fmtV:v=>fmt(v,0)})));
+  g.appendChild(fig("TF1 cumulé","Accidents avec arrêt seuls — cumul depuis janvier",lineChart({labels:labs,values:ms.map(m=>m.cumul.tf1),color:"#2a78d6",name:"TF1",fmtV:v=>fmt(v,0)})));
   g.appendChild(fig("Taux de gravité cumulé","Jours d'arrêt pour 1 000 heures",lineChart({labels:labs,values:ms.map(m=>m.cumul.tg),color:"#eb6834",name:"TG",fmtV:v=>fmt(v,1)})));
   c1.appendChild(g);
   app.appendChild(c1);
@@ -1400,6 +1435,7 @@ function viewDash(){
     const ca=document.getElementById("certAdd"); if(ca) ca.onclick=()=>{ STATE.tab="set"; render(); toast("Ajoutez le certificat dans la carte « Certification MASE »"); };
     document.querySelectorAll(".bz").forEach(z=> z.onclick=()=>{ STATE.zone = STATE.zone===z.dataset.z? null : z.dataset.z; render(); });
     const cl=document.getElementById("zclr"); if(cl) cl.onclick=()=>{ STATE.zone=null; render(); };
+    brancheSelTrim(document,"qAnaDash");
   },0);
   return app;
 }
@@ -1418,6 +1454,8 @@ function viewComp(){
       {name:"AT sans arrêt",color:"#eb6834",values:tt.map(v=>v.atsa)},
       {name:"AT bénins",color:"#eda100",values:tt.map(v=>v.ben)}],directLabels:false,height:200}),
     [{name:"AT avec arrêt",color:"#d03b3b"},{name:"AT sans arrêt",color:"#eb6834"},{name:"AT bénins",color:"#eda100"}]));
+  g.appendChild(fig("Taux de fréquence TF1 par exercice","Accidents avec arrêt × 1 000 000 / heures travaillées",
+    barChart({labels:YEARS.map(String),series:[{name:"TF1",color:"#2a78d6",values:tt.map(v=>v.tf1)}],fmtV:v=>fmt(v,2),height:200})));
   g.appendChild(fig("Taux de gravité par exercice","Jours d'arrêt pour 1 000 heures travaillées",
     barChart({labels:YEARS.map(String),series:[{name:"TG",color:"#eb6834",values:tt.map(v=>v.tg)}],fmtV:v=>fmt(v,2),height:200})));
   g.appendChild(fig("Vigiminutes et remontées terrain","",
@@ -1448,11 +1486,11 @@ function viewComp(){
 
   const c3=document.createElement("div"); c3.className="card";
   c3.innerHTML=`<h2><span class="bar"></span>Objectifs de la politique par exercice</h2>
-    <p class="sub">Bilan de fin d'exercice (appréciation T4, ou T3 pour l'exercice en cours).</p>`;
+    <p class="sub">Bilan de fin d'exercice — appréciation T4, ou dernier trimestre clos pour l'exercice en cours.</p>`;
   let h=`<div class="tw"><table><thead><tr><th>Exercice</th><th>Slogan</th><th class="n">Objectifs</th><th class="c">😀</th><th class="c">🙂</th><th class="c">😐</th><th class="c">😟</th><th class="c">—</th></tr></thead><tbody>`;
   YEARS.forEach(v=>{
     const yy=DB.years[v]; if(!yy) return;
-    const ref = v===new Date().getFullYear()? (trimestreCourant()||"T4") : "T4";
+    const ref = STATE.qana || (v===new Date().getFullYear()? (trimestreClos(v)||"T4") : "T4");
     const cnt=k=>yy.objectifs.filter(o=>o[ref].s===k).length;
     h+=`<tr><td><b>${v}</b> <span style="color:var(--faint)">(${ref})</span></td><td style="white-space:normal;max-width:320px">${esc(yy.politique.slogan)}</td>
       <td class="n">${yy.objectifs.length}</td><td class="c">${cnt("😀")}</td><td class="c">${cnt("🙂")}</td><td class="c">${cnt("😐")}</td><td class="c">${cnt("😟")}</td><td class="c">${cnt("")}</td></tr>`;
@@ -1715,8 +1753,8 @@ function accForm(idx){
 }/* ============================== OBJECTIFS SSE =========================== */
 function viewObj(){
   const y=Y(), app=document.createElement("div");
-  const qc=trimestreCourant();
-  const evalues=y.objectifs.filter(o=>qc? o[qc].s : (o.T4.s||o.T3.s)).length;
+  const qc=trimestreCourant(), qa=trimestreAnalyse(), qref=qa||"T4";
+  const evalues=y.objectifs.filter(o=>o[qref].s).length;
 
   if(!STATE.edit && !LECTURE){
     const nb=el(`<div class="note"><b>Mode consultation — les analyses sont verrouillées</b>
@@ -1737,26 +1775,27 @@ function viewObj(){
 
   app.appendChild(el(`<div class="kpigrid" style="margin-bottom:14px">
     ${kpi("Objectifs de la politique",fmt(y.objectifs.length,0),"exercice "+STATE.year)}
-    ${kpi("Suivi à date",qc||"—",qc?"trimestre en cours":"exercice clos")}
-    ${kpi("Objectifs évalués "+(qc||"T4"),fmt(evalues,0)+" / "+fmt(y.objectifs.length,0),"",statutDe(evalues,y.objectifs.length,"min"))}
-    ${kpi("Atteints ou en bonne voie",fmt(y.objectifs.filter(o=>{const s=qc?o[qc].s:(o.T4.s||o.T3.s);return s==="😀"||s==="🙂";}).length,0),"sur "+fmt(y.objectifs.length,0))}
+    ${kpi("Trimestre analysé",qref,STATE.qana?"choisi manuellement":(qa===qc?"trimestre en cours":(trimestreClos()?"dernier trimestre clos":"exercice clos")))}
+    ${kpi("Objectifs évalués "+qref,fmt(evalues,0)+" / "+fmt(y.objectifs.length,0),"",statutDe(evalues,y.objectifs.length,"min"))}
+    ${kpi("Atteints ou en bonne voie",fmt(y.objectifs.filter(o=>{const st=o[qref].s;return st==="😀"||st==="🙂";}).length,0),"sur "+fmt(y.objectifs.length,0)+" en "+qref)}
   </div>`));
 
   const c=document.createElement("div"); c.className="card c-v";
   c.innerHTML=`<h2><span class="bar"></span>Suivi des objectifs SSE ${STATE.year}</h2>
-    <p class="sub">Une ligne par objectif. Le trimestre en cours est surligné. En mode édition, un clic sur le pictogramme fait défiler les appréciations.</p>`;
+    <p class="sub">Une ligne par objectif. Le trimestre analysé est surligné. En mode édition, un clic sur le pictogramme fait défiler les appréciations.</p>`;
   const leg=el(`<div class="legend" style="margin-bottom:10px"></div>`);
   STATUTS.filter(s=>s.k).forEach(s=>{ const sp=document.createElement("span"); sp.innerHTML=smileySVG(s.k,20)+" "+esc(s.lab); leg.appendChild(sp); });
   leg.appendChild(el(`<span class="spacer"></span>`));
-  leg.appendChild(el(`<span><b style="color:var(--ink)">Trimestres affichés</b>
-    <select id="qFilter" style="border:1px solid var(--line2);border-radius:8px;padding:4px 8px;background:#fff">
-      <option value="">Tous</option>${TRIM.map(t=>`<option value="${t}"${STATE.trim===t?" selected":""}>${t}${t===qc?" (en cours)":""}</option>`).join("")}</select></span>`));
+  leg.appendChild(el(selTrim("qAnaObj")));
+  leg.appendChild(el(`<span class="qsel"><b>Colonnes affichées</b>
+    <select id="qFilter" class="qana">
+      <option value="">Toutes</option>${TRIM.map(t=>`<option value="${t}"${STATE.trim===t?" selected":""}>${t}${t===qc?" · en cours":""}</option>`).join("")}</select></span>`));
   c.appendChild(leg);
   const TSHOW = STATE.trim? [STATE.trim] : TRIM;
   let h=`<div class="tw"><table class="objtbl"><thead><tr>
     <th style="min-width:32px">N°</th><th style="min-width:220px">Objectif</th><th>Domaine</th>
     <th style="min-width:170px">Indicateurs de suivi</th><th style="min-width:110px">Cible</th><th style="min-width:190px">Moyens mis en place (FOH)</th>
-    ${TSHOW.map(t=>`<th class="c ${t===qc?"qcur":""}" style="min-width:150px">${t}${t===qc?" · en cours":""}</th>`).join("")}
+    ${TSHOW.map(t=>`<th class="c ${t===qref?"qcur":""}" style="min-width:150px">${t}${t===qref?" · analysé":(t===qc?" · en cours":"")}</th>`).join("")}
     <th style="min-width:190px">Bilan annuel</th><th class="c editonly"></th></tr></thead><tbody>`;
   y.objectifs.forEach((o,i)=>{
     h+=`<tr><td class="c">${i+1}</td><td><b>${esc(o.lib)}</b></td><td>${domPill(o.dom)}</td>
@@ -1764,7 +1803,7 @@ function viewObj(){
       <td><textarea rows="3" data-o="${i}" data-k="cible">${esc(o.cible)}</textarea></td>
       <td><textarea rows="3" data-o="${i}" data-k="foh">${esc(o.foh)}</textarea></td>`;
     TSHOW.forEach(t=>{
-      h+=`<td class="c ${t===qc?"qcur":""}">
+      h+=`<td class="c ${t===qref?"qcur":""}">
         <button class="smi" data-o="${i}" data-t="${t}" title="${esc((STATUTS.find(s=>s.k===o[t].s)||STATUTS[0]).lab)}">${smileySVG(o[t].s,28)}</button>
         <textarea rows="3" placeholder="Analyse, preuves, écarts…" data-o="${i}" data-k="${t}.c">${esc(o[t].c)}</textarea>
         <button class="icobtn editonly" data-clrq="${i}|${t}" title="Effacer ce trimestre">🗑</button></td>`;
@@ -1813,6 +1852,7 @@ function viewObj(){
       b.onclick=()=>{ const i=+b.dataset.i;
         if(confirm("Supprimer l'objectif « "+Y().objectifs[i].lib.slice(0,60)+"… » ?")){ Y().objectifs.splice(i,1); saveDB(); render(); toast("Objectif supprimé"); } };
     });
+    brancheSelTrim(document,"qAnaObj");
     const qf=document.getElementById("qFilter");
     if(qf) qf.onchange=e=>{ STATE.trim=e.target.value||null; render(); };
     const oa=document.getElementById("objAdd");
@@ -1956,12 +1996,12 @@ function viewBul(){
   return app;
 }
 function printFull(){
-  const y=Y(), L=indicateurs(STATE.year), qc=trimestreCourant();
+  const y=Y(), L=indicateurs(STATE.year), qc=trimestreCourant(), qa=trimestreAnalyse();
   const host=document.createElement("div"); host.id="pfh"; host.className="prt";
   host.innerHTML=`<div class="pagebreak"></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="width:90px">${logoHTML(40)}</div>
       <div><h2 style="font-size:17px;margin:0">Suivi des objectifs SSE ${STATE.year} — CM3</h2>
-      <div style="font-size:11px;color:#555">Slogan : « ${esc(y.politique.slogan)} » · ${esc(DB.entreprise.instance)}${qc?" · trimestre en cours : "+qc:""}</div></div></div>
+      <div style="font-size:11px;color:#555">Slogan : « ${esc(y.politique.slogan)} » · ${esc(DB.entreprise.instance)}${qa?" · trimestre analysé : "+qa:""}${qc?" · trimestre en cours : "+qc:""}</div></div></div>
     <table style="width:100%"><thead><tr><th>Objectif</th><th>Domaine</th><th>Indicateurs</th><th>Cible</th><th>Moyens (FOH)</th>${TRIM.map(t=>`<th>${t}</th>`).join("")}<th>Bilan</th></tr></thead>
       <tbody>${y.objectifs.map(o=>`<tr><td style="white-space:normal">${esc(o.lib)}</td><td>${esc(o.dom)}</td><td style="white-space:normal">${esc(o.ind)}</td><td style="white-space:normal">${esc(o.cible)}</td><td style="white-space:normal">${esc(o.foh)}</td>${TRIM.map(t=>`<td style="text-align:center;white-space:normal;min-width:110px">${smileySVG(o[t].s,16)}<div style="font-size:8.5px">${esc(o[t].c)}</div></td>`).join("")}<td style="white-space:normal">${esc(o.bilan)}</td></tr>`).join("")}</tbody></table>
     <div class="pagebreak"></div>
