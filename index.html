@@ -155,6 +155,8 @@ tr.cur td{background:#fff8e9!important;box-shadow:inset 3px 0 0 var(--accent)}
 figcaption{font-size:13.5px;font-weight:700;margin-bottom:2px;color:var(--ink)}
 .figsub{font-size:12px;color:var(--ink2);margin-bottom:9px}
 .legend{display:flex;gap:13px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:8px 0 2px;align-items:center}
+.note.danger{background:var(--warn-bg);border-color:#f0c4c4;border-left:4px solid var(--warn)}
+.note.danger b{color:#9a2222}
 .qsel{display:inline-flex;align-items:center;gap:6px}
 .qsel b{color:var(--ink)}
 .qsel select.qana{border:1px solid var(--line2);border-radius:8px;padding:4px 8px;background:#fff;font:inherit;font-size:12px;color:var(--ink)}
@@ -302,7 +304,7 @@ const CONFIG = {
   // Adresse du webhook Apps Script (celle qui se termine par /exec).
   // Renseignée ici, elle est appliquée automatiquement : les lecteurs n'ont
   // plus rien à configurer, ils ouvrent le lien et voient les données à jour.
-  WEBHOOK_URL: "",
+  WEBHOOK_URL: "https://script.google.com/macros/s/AKfycbzgNm6RBdjKl-OBdNPxapPGv3Za-PgwPuqbTKoSPukAO7YdefBZz_c60cNFMW5kxo1lvw/exec",
 
   // true = application verrouillée en consultation (aucun bouton d'édition,
   // onglet Réglages masqué). Peut aussi s'activer par l'adresse : ?lecture=1
@@ -675,8 +677,14 @@ function deepMerge(base,over){
   }
   return (over===undefined)? base : over;
 }
+/* VIERGE = ce navigateur n'a aucune donnée locale : ce qui est affiché sort du
+   modèle de départ, pas du travail réel. Tant qu'une récupération n'a pas
+   réussi, tout envoi est bloqué — c'est le garde-fou qui empêche un poste neuf
+   d'écraser le classeur partagé avec les données d'origine. */
+let VIERGE=false, PULL_OK=false, CONFLIT=null;
 function loadDB(){
   const raw=lsGet(STORE_KEY);
+  VIERGE=!raw;
   if(!raw) return JSON.parse(JSON.stringify(DB_SEED));
   try{ return deepMerge(JSON.parse(JSON.stringify(DB_SEED)),JSON.parse(raw)); }catch(e){ return JSON.parse(JSON.stringify(DB_SEED)); }
 }
@@ -2027,14 +2035,32 @@ async function api(action,payload){
   if(!j.ok) throw new Error(j.error||"Erreur serveur");
   return j;
 }
-async function syncPull(silent){
+async function syncPull(silent,force){
   try{ setSync("busy","Récupération…"); const j=await api("pull");
+    /* Garde-fou anti-écrasement : si ce poste a été modifié APRÈS le dernier
+       envoi au classeur partagé, une récupération détruirait ce travail.
+       On suspend et on laisse l'utilisateur trancher. */
+    const loc=(DB.meta&&DB.meta.updatedAt)||"", dist=j.updatedAt||"";
+    if(!force && !VIERGE && loc && dist && loc>dist){
+      CONFLIT={loc:loc,dist:dist};
+      setSync("err","Ce poste est en avance sur le classeur partagé");
+      render(); if(!silent) toast("Récupération suspendue : vos données locales sont plus récentes.");
+      return;
+    }
+    CONFLIT=null;
     if(j.data&&j.data.years){ DB=deepMerge(DB,j.data); migrate(); lsSet(STORE_KEY,JSON.stringify(DB)); }
-    setSync("ok","Synchronisé à "+new Date().toLocaleTimeString("fr-FR")); if(!silent){ render(); toast("Données récupérées"); }
+    PULL_OK=true; VIERGE=false;
+    setSync("ok","Synchronisé à "+new Date().toLocaleTimeString("fr-FR"));
+    if(!silent){ render(); toast("Données récupérées"); } else render();
   }catch(e){ setSync("err",e.message); if(!silent) toast("Synchronisation impossible : "+e.message); }
 }
 async function syncPush(silent){
   if(LECTURE){ if(!silent) toast("Lien en lecture seule : envoi désactivé"); return; }
+  if(VIERGE && !PULL_OK){
+    setSync("err","Envoi bloqué : données non récupérées");
+    toast("Envoi bloqué — ce navigateur n'a pas encore récupéré les données du classeur partagé.");
+    return;
+  }
   try{ setSync("busy","Envoi…"); await api("push",{data:DB}); setSync("ok","Enregistré sur le classeur partagé"); if(!silent) toast("Données envoyées"); }
   catch(e){ setSync("err",e.message); if(!silent) toast("Envoi impossible : "+e.message); }
 }
@@ -2115,7 +2141,7 @@ function viewSet(){
     const q=id=>document.getElementById(id);
     q("stSave").onclick=()=>{ s.webhook=q("stWeb").value.trim(); s.pass=q("stPass").value; s.device=q("stDev").value.trim(); s.autoSync=q("stAuto").value==="1"; saveDB(true); toast("Réglages enregistrés"); render(); };
     q("stTest").onclick=async()=>{ try{ await api("ping"); setSync("ok","Connexion OK"); toast("Connexion réussie ✔"); }catch(e){ setSync("err",e.message); toast("Échec : "+e.message); } };
-    q("stPull").onclick=()=>syncPull(false); q("stPush").onclick=()=>syncPush(false);
+    q("stPull").onclick=()=>syncPull(false); q("stPush").onclick=()=>{ CONFLIT=null; syncPush(false); };
     q("stImport").onclick=async()=>{
       if(!DB.settings.webhook){ toast("Renseignez d'abord le webhook"); return; }
       if(!confirm("Importer les données du classeur de collecte ?\n\nLes valeurs du classeur remplacent celles de l'application pour les onglets renseignés. Pensez à télécharger une sauvegarde avant.")) return;
@@ -2158,6 +2184,41 @@ const TABS=[
   {id:"bul",lab:"Bulletin",ic:"📰"},
   {id:"set",lab:"Réglages",ic:"⚙️"}
 ];
+/* Bandeau d'avertissement sur l'état de la sauvegarde.
+   Deux situations méritent d'être dites en grand, pas dans une pastille :
+   - aucun webhook : les données ne vivent que dans ce navigateur ;
+   - navigateur neuf dont la récupération a échoué : ce qui est affiché est le
+     modèle de départ, pas le travail réel, et l'envoi est bloqué. */
+function bandeauSync(){
+  if(CONFLIT){
+    const d=v=>{ try{ return new Date(v).toLocaleString("fr-FR"); }catch(e){ return v; } };
+    const n=el(`<div class="note danger"><b>⚠ Ce poste est en avance sur le classeur partagé</b>
+      Vos données locales datent du <b>${d(CONFLIT.loc)}</b>, celles du classeur du <b>${d(CONFLIT.dist)}</b>.
+      La récupération a été suspendue pour ne pas écraser votre travail. Choisissez :
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-primary" id="cfPush">⬆ Envoyer mes données vers le classeur</button>
+        <button class="btn btn-ghost" id="cfPull">⬇ Récupérer quand même (mes modifications locales seront perdues)</button>
+      </div></div>`);
+    setTimeout(()=>{
+      const a=document.getElementById("cfPush"); if(a) a.onclick=()=>{ CONFLIT=null; syncPush(false).then(render); };
+      const b=document.getElementById("cfPull"); if(b) b.onclick=()=>{
+        if(confirm("Récupérer les données du classeur partagé et perdre définitivement les modifications faites sur ce poste ?")){
+          CONFLIT=null; syncPull(false,true); } };
+    },0);
+    return n;
+  }
+  if(!DB.settings.webhook){
+    return el(`<div class="note danger"><b>⚠ Aucune synchronisation — vos données ne vivent que dans ce navigateur</b>
+      Elles ne sont enregistrées sur aucun serveur : un autre poste, une autre adresse ou un nettoyage du navigateur
+      ne les verra pas ou les perdra. Branchez le webhook dans l'onglet Réglages${LECTURE?"":", ou téléchargez une sauvegarde"}.</div>`);
+  }
+  if(VIERGE && !PULL_OK){
+    return el(`<div class="note danger"><b>⚠ Données non récupérées — ce que vous voyez n'est pas à jour</b>
+      Ce navigateur n'a encore jamais reçu les données du classeur partagé : l'écran affiche le modèle de départ.
+      L'envoi est bloqué tant que la récupération n'a pas abouti. ${LECTURE?"Rechargez la page dans un instant.":"Réglages → ⬇ Récupérer."}</div>`);
+  }
+  return null;
+}
 function render(){
   const sy=window.scrollY;
   document.body.classList.toggle("edit",STATE.edit);
@@ -2181,6 +2242,7 @@ function render(){
       bg.textContent="👁 Lecture seule"; document.querySelector("header").appendChild(bg); }
   } else { bm.textContent=STATE.edit?"✏️ Édition":"🔒 Consultation"; bm.classList.toggle("on",STATE.edit); }
   const app=document.getElementById("app"); app.innerHTML="";
+  const alerte=bandeauSync(); if(alerte) app.appendChild(alerte);
   app.appendChild(({dash:viewDash,saisie:viewSaisie,obj:viewObj,comp:viewComp,bul:viewBul,set:viewSet}[STATE.tab]||viewDash)());
   setSync(STATE.sync.state);
   if(sy>0) window.scrollTo(0,sy);
