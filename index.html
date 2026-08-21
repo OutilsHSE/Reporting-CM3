@@ -790,7 +790,7 @@ function totals(year, mIdx){
     const P=prorata(year), comps=[];
     const add=(v,c,cum)=>{ if(c==null||c<=0) return; const cible=cum? c*P : c; if(cible<=0) return;
       comps.push(Math.min(100, n(v)/cible*100)); };
-    add(t.pa,100,false);
+    add(t.pa,75,false);
     add(t.vgpTaux,100,false);
     add(t.qhpN,12,true);
     add(t.rem, t.remCibleAn,true);
@@ -884,13 +884,13 @@ function niceScale(max,prefInt){
   for(let v=0;v<=top+step/1e6;v+=step) ticks.push(+v.toFixed(6));
   return {max:top,ticks:ticks,dec:step>=1?0:(step>=.1?1:2)};
 }
-function gauge(valPct,label,sub,cls){
+function gauge(valPct,label,sub,cls,txt){
   const v=Math.max(0,Math.min(100,n(valPct))), C=2*Math.PI*42;
   const d=document.createElement("div"); d.className="gaugebox";
   const s=sv("svg",{viewBox:"0 0 100 100",class:"gauge"});
   s.appendChild(sv("circle",{cx:50,cy:50,r:42,class:"gbg"}));
   s.appendChild(sv("circle",{cx:50,cy:50,r:42,class:"gfg "+(cls||"c-neutre"),"stroke-dasharray":(C*v/100)+" "+C}));
-  const t=sv("text",{x:50,y:52,"text-anchor":"middle","font-size":"25"}); t.textContent=Math.round(v)+"%"; s.appendChild(t);
+  const t=sv("text",{x:50,y:52,"text-anchor":"middle","font-size":"25"}); t.textContent=(txt!=null?txt:Math.round(v)+"%"); s.appendChild(t);
   if(sub){ const t2=sv("text",{x:50,y:68,"text-anchor":"middle","font-size":"10","font-weight":"500",style:"fill:#6b7a8d"}); t2.textContent=sub; s.appendChild(t2); }
   d.appendChild(s);
   const l=document.createElement("div");
@@ -1181,7 +1181,7 @@ function indicateurs(year){
     I("Système","Résultat","Points d'amélioration en audit interne",fmt(t.auditPA,0),t.auditPA,"—",null,null,"Audit interne"),
     I("Système","Résultat","Avancement annuel du programme SSE",pct(t.avancement),t.avancement,"100 %",100,"min","Calcul automatique"),
     I("Système","Résultat","NC relevées en audit interne",fmt(x.ncAudit,0),x.ncAudit,"0",0,"max","Bilan système",RG_NC),
-    I("Système","Résultat","Avancement du plan d'actions",pct(t.pa),t.pa,"100 %",100,"min","Saisie mensuelle")
+    I("Système","Résultat","Avancement du plan d'actions",pct(t.pa),t.pa,"75 %",75,"min","Saisie mensuelle")
   ];
 }
 
@@ -1205,7 +1205,9 @@ function viewDash(){
   b3.appendChild(el(`<div class="s" style="margin-top:4px">${fmt(ta.rem,0)} sur ${fmt(remC,0)} attendues${P<1?" à date":""}<br>cible ${fmt(ta.remCibleAn,0)} / an</div>`)); band.appendChild(b3);
   const j=joursRestants(DB.entreprise.certifFin);
   const cert=el(`<div class="kpi"></div>`);
-  cert.appendChild(gauge(x.masePct,"Certification MASE","système",gaugeCls(x.masePct,100)));
+  const pcert=j==null?100:Math.max(0,Math.min(100,j/1095*100));
+  const ccl=j==null?"c-neutre":j>180?"c-ok":j>30?"c-mid":"c-bad";
+  cert.appendChild(gauge(pcert,"Certification MASE","validité restante",ccl,j==null?"\u2014":fmt(j,0)+" j"));
   cert.appendChild(el(`<div class="s" style="line-height:1.4;margin-top:4px">${esc(DB.entreprise.certif)}<br>
     <b style="color:${j!=null&&j<120?"var(--warn)":"var(--ink)"}">${j==null?esc(DB.entreprise.valide):(j>0?"Échéance dans "+fmt(j,0)+" j":"Certificat échu")}</b></div>`));
   if(DB.settings.certif) cert.appendChild(el(`<img class="certthumb" id="certTh" src="${esc(DB.settings.certif)}" alt="Certificat MASE" title="Cliquer pour agrandir">`));
@@ -1418,8 +1420,7 @@ function viewDash(){
   gb.appendChild(gauge(ta.avancement,"Avancement du programme SSE",P<1?"à date":"sur l'exercice",gaugeCls(ta.avancement,100)));
   gv.appendChild(gb);
   gv.appendChild(el(`<div class="kpigrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-    ${kpi("Avancement du plan d'actions",pct(ta.pa),"cible 100 %",statutDe(ta.pa,100,"min"))}
-    ${kpi("Réalisation du système MASE",pct(x.masePct),"auto-évaluation",statutDe(x.masePct,100,"min"))}
+    ${kpi("Avancement du plan d'actions",pct(ta.pa),"cible 75 %",statutDe(ta.pa,75,"min"))}
     ${kpi("Vigiminutes réalisées",fmt(ta.vigR,0),"analyses de risque avant tâche")}
   </div>`));
   v4.appendChild(gv);
@@ -1629,7 +1630,7 @@ function viewSaisie(){
     {t:"Santé au travail",cls:"c-g",f:[["bruitEquip","% équipé de protections auditives moulées"],["ncCagoule","NC port des cagoules ventilées"],["peintureST","% des mises en peinture sous-traitées"],["campagnes","Campagnes de mesures d'exposition (nb)"]],
       calc:()=>`Maladies professionnelles reconnues : <b>${fmt(t.mp,0)}</b>`},
     {t:"Environnement",cls:"c-g",f:[["pollutions","Événements environnementaux significatifs"],["ncDechets","NC tri des déchets"],["ncStockage","NC stockage produits chimiques"],["sensibEnv","Actions de sensibilisation environnement (nb)"]],calc:null},
-    {t:"Système & certification MASE",cls:"c-v",f:[["ncAudit","NC relevées en audit interne"],["masePct","% de réalisation du système MASE"],["budget","Budget SSE engagé (€)"]],calc:null}
+    {t:"Système & certification MASE",cls:"c-v",f:[["ncAudit","NC relevées en audit interne"],["budget","Budget SSE engagé (€)"]],calc:null}
   ];
   BL.forEach(b=>{
     const cc=document.createElement("div"); cc.className="card "+b.cls;
@@ -1639,7 +1640,7 @@ function viewSaisie(){
       const HINT={formPct:"Renseigné à la main tant que le registre n'est pas branché.",
         vgpPct:"Part des vérifications générales périodiques réalisées à l'échéance.",
         vgpNb:"Engins, appareils de levage, EPI antichute, extincteurs…",
-        masePct:"Auto-évaluation MASE de l'exercice."};
+        };
       const fl=el(`<div class="field"><label>${esc(lab)}</label><div class="row" style="gap:6px;flex-wrap:nowrap">
         <input type="number" step="1" value="${n(y.extras[k])||""}" placeholder="0">
         <button class="icobtn editonly" data-clr="${k}" title="Effacer">🗑</button></div>
