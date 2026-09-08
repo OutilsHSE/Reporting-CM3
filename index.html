@@ -341,7 +341,9 @@ function emptyMonth(m){
     thS:0,thSe:0,thE:0,              // thèmes traités dans le mois : Santé / Sécurité / Environnement
     qhpN:0,qhpE:0,qhpP:0,              // QHP réalisés / effectif concerné / participants
     na:0,acc:0,                      // nouveaux arrivants / accueils sécurité
-    vms:0,vmsR:0,                    // visites terrain (VMS) / remontées issues des VMS
+    vms:0,vmsR:0,                    // visites terrain (VMS) / remontées issues des VMS (champ historique, réparti en vmsSD + vmsPA)
+    vmsSD:0,vmsPA:0,                 // efficacité VMS : remontées de situation dangereuse / pistes d'amélioration
+    qhpPA:0,                         // efficacité QHP : pistes d'amélioration identifiées pendant le quart d'heure
     aud:0,nc:0,sanc:0,               // audits internes / non-conformités / courriers de sanction
     form:0,formTxt:"",              // formations réalisées (nb) et leur détail
     pdp:0,proto:0,evalP:0,bfc:0,     // plans de prévention / protocoles sécurité / éval. prestataires / bilans fin de chantier
@@ -398,6 +400,11 @@ const EXTRAS_SRC = {
   "2025":{vgpPct:100,vgpNb:13,sst:50,extincteurs:90,bruitForm:0,bruitEquip:100,ncCagoule:0,peintureST:40,campagnes:0,pollutions:0,ncDechets:0,ncStockage:1,sensibEnv:4,ncAudit:3,auditPA:8,auditPF:10,masePct:100},
   "2026":{vgpPct:100,vgpNb:13,sst:44,extincteurs:90,bruitForm:100,bruitEquip:100,ncCagoule:0,peintureST:60,campagnes:0,pollutions:0,ncDechets:0,ncStockage:1,sensibEnv:2,ncAudit:0,auditPA:0,auditPF:0,masePct:70}
 };
+/* Répartition SD / pistes d'amélioration des remontées de visites terrain, reconstituée
+   à partir des comptes rendus « Contrôle Sécurité Environnement Chantier » 2024-2026
+   (cases Points d'amélioration, Actions immédiates et Rappels particuliers).
+   Appliquée uniquement aux mois dont la répartition n'a pas encore été saisie. */
+const VMSR_SRC = {"2024":{"1":{"sd":1,"pa":1},"2":{"sd":1,"pa":1},"3":{"sd":1,"pa":0},"4":{"sd":0,"pa":1},"5":{"sd":2,"pa":1},"6":{"sd":1,"pa":2},"7":{"sd":0,"pa":1},"8":{"sd":0,"pa":2},"9":{"sd":1,"pa":0},"10":{"sd":0,"pa":1},"11":{"sd":1,"pa":1},"12":{"sd":2,"pa":0}},"2025":{"1":{"sd":0,"pa":1},"2":{"sd":1,"pa":0},"3":{"sd":0,"pa":1},"4":{"sd":0,"pa":1},"7":{"sd":0,"pa":1},"8":{"sd":1,"pa":1},"9":{"sd":1,"pa":0},"11":{"sd":0,"pa":1}},"2026":{"1":{"sd":1,"pa":0},"2":{"sd":1,"pa":0},"4":{"sd":1,"pa":1},"6":{"sd":1,"pa":1},"7":{"sd":0,"pa":2}}};
 const JSA_SRC = {
   "2024":{valeur:379,ref:"18/12/2023",periode:"Année 2024"},
   "2025":{valeur:730,ref:"18/12/2023",periode:"Année 2025"},
@@ -627,7 +634,7 @@ const ACC2026 = [{type:"Accident avec Arrêt de Travail",date:"2026-02-10",nom:"
 
 /* ----------------------------------------------------- Bulletin / faits */
 const DB_SEED = {
-  meta:{app:"reporting-cm3",schema:2,updatedAt:"",device:""},
+  meta:{app:"reporting-cm3",schema:3,updatedAt:"",device:""},
   settings:{webhook:"",pass:"",device:"",autoSync:true,logo:""},
   entreprise:{nom:"CM3",certif:"MASE — certificat n° EST 2023-2538",valide:"03/10/2023 → 02/10/2026",certifFin:"2026-10-02",
     instance:"Comité de pilotage SSE (2 Directeurs + cabinet consultant SSE) — mensuel ; revue de direction annuelle"},
@@ -711,6 +718,25 @@ function migrate(){
   });
   if(DB.settings.dirigeants===undefined) DB.settings.dirigeants=2;
   if(DB.settings.remParPers===undefined) DB.settings.remParPers=3;
+  if(DB.settings.remParVMS===undefined) DB.settings.remParVMS=1;      // remontées attendues par visite terrain
+  if(DB.settings.pisteParQHP===undefined) DB.settings.pisteParQHP=1;  // pistes d'amélioration attendues par QHP
+  /* Efficacité VMS/QHP : champs créés en v11. Tant que la répartition n'a pas été
+     saisie, on reprend celle reconstituée des CR ; à défaut, l'ancien total des
+     remontées bascule en pistes d'amélioration pour ne rien perdre. */
+  YEARS.forEach(y=>{
+    const Y=DB.years[y]; if(!Y) return;
+    const src=VMSR_SRC[String(y)]||{};
+    Y.months.forEach(m=>{
+      if(m.qhpPA===undefined) m.qhpPA=0;
+      const a=parseFloat(m.vmsSD)||0, b=parseFloat(m.vmsPA)||0;
+      if(!a && !b){                    // répartition pas encore saisie pour ce mois
+        const s=src[String(m.m)];
+        if(s){ m.vmsSD=s.sd; m.vmsPA=s.pa; }
+        else { m.vmsSD=0; m.vmsPA=(parseFloat(m.vmsR)||0); }
+      }
+      m.vmsR=0;   // champ historique neutralisé : le total est recalculé
+    });
+  });
   if(DB.settings.logo===undefined) DB.settings.logo="";
   if(!DB.settings.webhook && CONFIG.WEBHOOK_URL) DB.settings.webhook=CONFIG.WEBHOOK_URL;
   if(LECTURE){ DB.settings.pass=""; DB.settings.autoSync=true; }
@@ -758,7 +784,8 @@ function totals(year, mIdx){
     vigR:S(m=>m.vigR), rem:S(m=>m.rem),
     qhpN:S(m=>m.qhpN), qhpP:S(m=>m.qhpP),
     thS:S(m=>m.thS), thSe:S(m=>m.thSe), thE:S(m=>m.thE),
-    na:S(m=>m.na), acc:S(m=>m.acc), vms:S(m=>m.vms), vmsR:S(m=>m.vmsR),
+    na:S(m=>m.na), acc:S(m=>m.acc), vms:S(m=>m.vms),
+    vmsSD:S(m=>m.vmsSD), vmsPA:S(m=>m.vmsPA), qhpPA:S(m=>m.qhpPA),
     aud:S(m=>m.aud), nc:S(m=>m.nc), sanc:S(m=>m.sanc),
     form:S(m=>m.form), pdp:S(m=>m.pdp), proto:S(m=>m.proto), evalP:S(m=>m.evalP), bfc:S(m=>m.bfc),
     flash:S(m=>m.flash), nbMois:act.length
@@ -774,6 +801,27 @@ function totals(year, mIdx){
   const part = (mIdx==null)? 1 : (actAll.length? 1/12 : 0);
   t.remCible = (mIdx==null)? t.remCibleAn : t.remCibleAn/12;
   t.remTaux = t.remCible? t.rem/t.remCible*100 : 0;
+  /* --- Efficacité des visites terrain et des QHP (écart audit 2/6 du 21/09/2023) ---
+     Une visite ou un QHP est efficace s'il produit au moins une remontée : une
+     situation dangereuse (RSD) ou une piste d'amélioration. La cible n'est pas
+     proratisée au calendrier — elle est proportionnelle au nombre d'animations
+     réellement réalisées sur la période. */
+  t.vmsR       = t.vmsSD + t.vmsPA;
+  t.vmsRCible  = t.vms * n(DB.settings.remParVMS);
+  t.vmsRTaux   = t.vmsRCible? t.vmsR/t.vmsRCible*100 : 0;
+  t.vmsParVis  = t.vms? t.vmsR/t.vms : 0;
+  t.qhpPACible = t.qhpN * n(DB.settings.pisteParQHP);
+  t.qhpPATaux  = t.qhpPACible? t.qhpPA/t.qhpPACible*100 : 0;
+  t.qhpPAParAn = t.qhpN? t.qhpPA/t.qhpN : 0;
+  /* Part des mois animés ayant produit au moins une remontée (proxy du « % de visites utiles ») */
+  (function(){
+    const vm=ms.filter(m=>n(m.vms)>0);
+    t.vmsMois=vm.length; t.vmsMoisOk=vm.filter(m=>n(m.vmsSD)+n(m.vmsPA)>0).length;
+    t.vmsCouv = vm.length? t.vmsMoisOk/vm.length*100 : 0;
+    const qm=ms.filter(m=>n(m.qhpN)>0);
+    t.qhpMois=qm.length; t.qhpMoisOk=qm.filter(m=>n(m.qhpPA)>0).length;
+    t.qhpCouv = qm.length? t.qhpMoisOk/qm.length*100 : 0;
+  })();
   /* Diversité des thèmes : nombre de domaines couverts sur la période */
   t.themes = t.thS+t.thSe+t.thE;
   t.diversite = [t.thS,t.thSe,t.thE].filter(v=>v>0).length;
@@ -795,6 +843,7 @@ function totals(year, mIdx){
     add(t.qhpN,12,true);
     add(t.rem, t.remCibleAn,true);
     add(t.vms,12,true);
+    if(t.vmsRCible>0) comps.push(Math.min(100, t.vmsR/t.vmsRCible*100));   // efficacité des visites terrain
     add(t.aud,1,true);
     t.avancement = comps.length? comps.reduce((a,b)=>a+b,0)/comps.length : 0;
     t.avancementNb = comps.length;
@@ -1321,7 +1370,11 @@ function viewDash(){
     ${kpi("Participation",pct(ta.qhpTaux),"cible 80 %",statutDe(ta.qhpTaux,80,"min"))}
     ${kpi("Thèmes traités",fmt(ta.themes,0),fmt(ta.thS,0)+" santé · "+fmt(ta.thSe,0)+" sécu. · "+fmt(ta.thE,0)+" env.")}
     ${kpi("Diversité des domaines",fmt(ta.diversite,0)+" / 3","Santé · Sécurité · Environnement",statutDe(ta.diversite,3,"min"))}
+    ${kpi("Pistes d'amélioration issues des QHP",fmt(ta.qhpPA,0),ta.qhpN? "cible "+fmt(ta.qhpPACible,0)+" ("+fmt(DB.settings.pisteParQHP,0)+" par QHP)":"aucun QHP saisi",statutDe(ta.qhpPA,ta.qhpPACible,"min"))}
+    ${kpi("Pistes par QHP",fmt(ta.qhpPAParAn,1),"cible ≥ "+fmt(DB.settings.pisteParQHP,1),statutDe(ta.qhpPAParAn,n(DB.settings.pisteParQHP),"min"))}
+    ${kpi("QHP ayant produit une piste",pct(ta.qhpCouv),fmt(ta.qhpMoisOk,0)+" mois sur "+fmt(ta.qhpMois,0)+" animés",statutDe(ta.qhpCouv,100,"min"))}
   </div>`));
+  c3.appendChild(el(`<div class="note"><b>Efficacité des QHP</b>Un quart d'heure prévention est jugé efficace lorsqu'il fait remonter au moins ${fmt(DB.settings.pisteParQHP,0)} piste d'amélioration. Indicateur et cible chiffrée mis en place à la suite de l'écart mineur 2/6 de l'audit du 21/09/2023 (§ 1.5.4 et 1.3.5). Les pistes se saisissent dans l'onglet Saisie, colonne « Pistes d'amélioration » du bloc QHP.</div>`));
   const g3=el(`<div class="grid g2"></div>`);
   g3.appendChild(fig("Participation aux QHP","Objectif : 80 % du personnel hors administratif",
     barChart({labels:MOIS_C,series:[{name:"Participation",color:"#eb6834",
@@ -1361,11 +1414,26 @@ function viewDash(){
     <p class="sub">Présence managériale sur le terrain et observations formalisées.</p>`;
   v1.appendChild(el(`<div class="kpigrid">
     ${kpi("Visites terrain / VMS",fmt(ta.vms,0),aDate(12,STATE.year),statutDe(ta.vms,12,"cumul"))}
-    ${kpi("Remontées issues des VMS",fmt(ta.vmsR,0),"observations formalisées")}
+    ${kpi("Remontées issues des VMS",fmt(ta.vmsR,0),ta.vms? "cible "+fmt(ta.vmsRCible,0)+" ("+fmt(DB.settings.remParVMS,0)+" par visite)":"aucune visite saisie",statutDe(ta.vmsR,ta.vmsRCible,"min"))}
+    ${kpi("Dont situations dangereuses",fmt(ta.vmsSD,0),"RSD relevées en visite")}
+    ${kpi("Dont pistes d'amélioration",fmt(ta.vmsPA,0),"pistes identifiées en visite")}
+    ${kpi("Remontées par visite",fmt(ta.vmsParVis,1),"cible ≥ "+fmt(DB.settings.remParVMS,1),statutDe(ta.vmsParVis,n(DB.settings.remParVMS),"min"))}
+    ${kpi("Mois animés avec remontée",pct(ta.vmsCouv),fmt(ta.vmsMoisOk,0)+" mois sur "+fmt(ta.vmsMois,0)+" visités",statutDe(ta.vmsCouv,100,"min"))}
   </div>`));
+  v1.appendChild(el(`<div class="note" style="margin-top:12px"><b>Efficacité des visites terrain</b>Une visite est jugée efficace lorsqu'elle produit au moins ${fmt(DB.settings.remParVMS,0)} remontée : situation dangereuse (RSD)
+    ou piste d'amélioration. Indicateur et cible chiffrée mis en place à la suite de l'écart mineur 2/6
+    de l'audit du 21/09/2023 (§ 1.5.4 et 1.3.5 du référentiel). Le paramètre se règle dans l'onglet Réglages.</div>`));
   v1.appendChild(el(`<div style="margin-top:14px"></div>`));
-  v1.appendChild(fig("Visites terrain par mois","Objectif : une visite managériale par mois",
+  const gV=el(`<div class="grid g2"></div>`);
+  gV.appendChild(fig("Visites terrain par mois","Objectif : une visite managériale par mois",
     barChart({labels:MOIS_C,series:[{name:"VMS",color:"#1baf7a",values:y.months.map(m=>m.vms)}],target:1,targetLabel:"1 / mois",highlight:mi,height:180})));
+  gV.appendChild(fig("Remontées issues des visites par mois","Situations dangereuses et pistes d'amélioration",
+    barChart({labels:MOIS_C,series:[
+      {name:"Situations dangereuses",color:"#eb6834",values:y.months.map(m=>m.vmsSD)},
+      {name:"Pistes d'amélioration",color:"#2a78d6",values:y.months.map(m=>m.vmsPA)}],
+      target:n(DB.settings.remParVMS),targetLabel:"1 par visite",highlight:mi,height:180,directLabels:false}),
+    [{name:"Situations dangereuses",color:"#eb6834"},{name:"Pistes d'amélioration",color:"#2a78d6"}]));
+  v1.appendChild(gV);
   app.appendChild(v1);
 
   /* --- Volet 2 (orange) : accueil et formation --- */
@@ -1472,6 +1540,11 @@ function viewComp(){
       {name:"Vigiminutes",color:"#1baf7a",values:tt.map(v=>v.vigR)},
       {name:"Remontées suivies",color:"#2a78d6",values:tt.map(v=>v.rem)}],height:200}),
     [{name:"Vigiminutes",color:"#1baf7a"},{name:"Remontées suivies",color:"#2a78d6"}]));
+  g.appendChild(fig("Efficacité des visites terrain","Remontées issues des VMS par exercice",
+    barChart({labels:YEARS.map(String),series:[
+      {name:"Situations dangereuses",color:"#eb6834",values:tt.map(v=>v.vmsSD)},
+      {name:"Pistes d'amélioration",color:"#2a78d6",values:tt.map(v=>v.vmsPA)}],height:200,directLabels:false}),
+    [{name:"Situations dangereuses",color:"#eb6834"},{name:"Pistes d'amélioration",color:"#2a78d6"}]));
   g.appendChild(fig("Quart d'Heure Prévention","",
     barChart({labels:YEARS.map(String),series:[{name:"QHP réalisés",color:"#4a3aa7",values:tt.map(v=>v.qhpN)}],target:12,targetLabel:"Objectif 12 / an",height:200})));
   c.appendChild(g);
@@ -1486,6 +1559,11 @@ function viewComp(){
     ["Vigiminutes réalisées",v=>fmt(v.vigR,0)],["Remontées terrain suivies",v=>fmt(v.rem,0)],
     ["QHP réalisés",v=>fmt(v.qhpN,0)],["Participation QHP",v=>pct(v.qhpTaux)],["Diversité des thèmes",v=>fmt(v.diversite,0)+" / 3"],
     ["Visites terrain / VMS",v=>fmt(v.vms,0)],
+    ["Remontées issues des VMS",v=>fmt(v.vmsR,0)],
+    ["dont situations dangereuses",v=>fmt(v.vmsSD,0)],
+    ["dont pistes d'amélioration",v=>fmt(v.vmsPA,0)],
+    ["Remontées par visite (cible ≥ 1)",v=>fmt(v.vmsParVis,1)],
+    ["Pistes d'amélioration issues des QHP",v=>fmt(v.qhpPA,0)],
     ["Accueils sécurité",v=>fmt(v.acc,0)+" / "+fmt(v.na,0)],["Formations réalisées",v=>fmt(v.form,0)],
     ["Audits internes",v=>fmt(v.aud,0)],["Avancement du plan d'actions",v=>pct(v.pa)]];
   c2.appendChild(el(`<div class="tw"><table><thead><tr><th>Indicateur</th>${YEARS.map(v=>`<th class="n">${v}${v===new Date().getFullYear()?" *":""}</th>`).join("")}</tr></thead>
@@ -1513,9 +1591,9 @@ function viewComp(){
 const GROUPES=[
   {t:"Effectif & temps de travail",cls:"b",cols:[["eff","Effectif moyen",1],["h","Heures travaillées",0],["etpI","ETP intérim",2],["hI","Heures intérim",0]]},
   {t:"Accidentologie & santé",cls:"r",cols:[["mort","Décès",0],["ataa","AT avec arrêt",0],["atsa","AT sans arrêt",0],["ben","AT bénins",0],["traj","AT trajet",0],["jours","Jours d'arrêt",0],["mp","Maladies pro.",0],["atI","AT intérim",0],["atST","AT sous-traitants",0]]},
-  {t:"Quart d'Heure Prévention",cls:"o",cols:[["qhpN","QHP réalisés",0],["qhpE","Effectif concerné",0],["qhpP","Participants",0],["thS","Thèmes santé",0],["thSe","Thèmes sécurité",0],["thE","Thèmes environnement",0]]},
+  {t:"Quart d'Heure Prévention",cls:"o",cols:[["qhpN","QHP réalisés",0],["qhpE","Effectif concerné",0],["qhpP","Participants",0],["thS","Thèmes santé",0],["thSe","Thèmes sécurité",0],["thE","Thèmes environnement",0],["qhpPA","Pistes d'amélioration",0]]},
   {t:"Vigiminutes & remontées",cls:"g",cols:[["vigR","Vigiminutes réalisées",0],["rem","Remontées terrain suivies",0]]},
-  {t:"Terrain & audits",cls:"b",cols:[["vms","Visites terrain / VMS",0],["vmsR","Remontées issues des VMS",0],["aud","Audits internes",0],["sanc","Rappels à l'ordre",0]]},
+  {t:"Terrain & audits",cls:"b",cols:[["vms","Visites terrain / VMS",0],["vmsSD","Situations dangereuses (VMS)",0],["vmsPA","Pistes d'amélioration (VMS)",0],["aud","Audits internes",0],["sanc","Rappels à l'ordre",0]]},
   {t:"Accueil & formation",cls:"v",cols:[["na","Nouveaux arrivants",0],["acc","Accueils sécurité",0],["form","Formations réalisées",0],["flash","Flashs SSE diffusés",0]]},
   {t:"Entreprises extérieures & plan d'actions",cls:"m",cols:[["pdp","Plans de prévention",0],["proto","Protocoles sécurité (maj)",0],["evalP","Évaluations prestataires",0],["bfc","Bilans fin de chantier",0],["pa","Avancement PA (%)",0]]}
 ];
@@ -2096,6 +2174,8 @@ function viewSet(){
   const gO=el(`<div class="grid g3">
     <div class="field"><label>Remontées attendues par personne et par an</label><input type="number" id="rgRem" value="${n(s.remParPers)}"></div>
     <div class="field"><label>Dirigeants non concernés (nb)</label><input type="number" id="rgDir" value="${n(s.dirigeants)}"><div class="hint">Retirés de l'effectif du mois pour le calcul de la cible.</div></div>
+    <div class="field"><label>Remontées attendues par visite terrain</label><input type="number" id="rgVms" value="${n(s.remParVMS)}"><div class="hint">Efficacité des VMS — écart audit 2/6 du 21/09/2023.</div></div>
+    <div class="field"><label>Pistes d'amélioration attendues par QHP</label><input type="number" id="rgQhp" value="${n(s.pisteParQHP)}"><div class="hint">Efficacité des quarts d'heure prévention.</div></div>
     <div class="field"><label>Cible ${STATE.year} calculée</label><input value="${fmt(yearTotals(STATE.year).remCibleAn,0)} remontées" disabled><div class="hint">${fmt(yearTotals(STATE.year).concernes,1)} collaborateurs concernés en moyenne.</div></div>
   </div>`);
   gO.querySelectorAll("#rgRem,#rgDir").forEach(i=>i.disabled=!STATE.edit);
@@ -2153,6 +2233,8 @@ function viewSet(){
       }catch(e){ setSync("err",e.message); toast("Import impossible : "+e.message); } };
     q("rgRem").addEventListener("change",e=>{ DB.settings.remParPers=parseFloat(e.target.value)||0; saveDB(); render(); });
     q("rgDir").addEventListener("change",e=>{ DB.settings.dirigeants=parseFloat(e.target.value)||0; saveDB(); render(); });
+    q("rgVms").addEventListener("change",e=>{ DB.settings.remParVMS=parseFloat(e.target.value)||0; saveDB(); render(); });
+    q("rgQhp").addEventListener("change",e=>{ DB.settings.pisteParQHP=parseFloat(e.target.value)||0; saveDB(); render(); });
     const pickImg=(inputId,cb)=>{ const f=q(inputId).files[0]; if(!f) return;
       if(f.size>1200000){ toast("Image trop lourde (1,2 Mo max)"); return; }
       const rd=new FileReader(); rd.onload=()=>{ cb(rd.result); }; rd.readAsDataURL(f); };
